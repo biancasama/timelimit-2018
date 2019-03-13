@@ -178,7 +178,7 @@ timeseries_folder= [current_subj_folder,'/Timeseries'];
 if ~exist([timeseries_folder, '/SpatialFilter']); mkdir([timeseries_folder, '/SpatialFilter']); end
 cd(fullfile(timeseries_folder,'/SpatialFilter'));
 
-save SF_results Ind* tWin nTrials trl msf d blRange SF_timecourses_bl tAx subjnum
+save SF_results_newBl Ind* tWin nTrials trl msf d blRange SF_timecourses_bl tAx subjnum
 
 %% Tell me what I have done so far
 disp(['subj ' num2str(subjnum) ' done'])
