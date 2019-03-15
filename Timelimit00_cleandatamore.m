@@ -49,8 +49,6 @@ end
 %% Create indexes for all trials together
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% conds=[];resps=[];clockstarts=[];timediff=[];waitingtimes=[];resptimes=[];
-
 condinf = [TRIALS.cond]';
 condinf(condinf==32) = Inf; %replace all the 32 with Inf
 conds= condinf; %to not get confused
@@ -83,7 +81,7 @@ ntrials= length([TRIALS.rt]');
        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% newconds= conds(idx_goodtrls);         
+% newconds= conds(idx_goodtrls); % recomputed in script for average/variability        
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -127,7 +125,7 @@ if input('Save BEHAVIORAL INDEXES results? RISK OF OVERWRITING  (1/0) ... ')
          if ~exist(fullfile(behav_folder)); mkdir(fullfile(behav_folder)); end;
     cd(behav_folder);
 
-%     save GOOD_BEHAV newgood_resps outliers good_resps_cond  goodrespsall idx_goodtrls idx_allbadtrls whichEarly whichLate conds
+    save GOOD_BEHAV newgood_resps outliers good_resps_cond  goodrespsall idx_goodtrls idx_allbadtrls whichEarly whichLate conds
 end
 
 %%
