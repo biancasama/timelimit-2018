@@ -12,35 +12,19 @@
 %}
 %=========================================================================%
 %% START of the script 
-%% Set path (27.09) (change it to a main script?)
-clearvars;
-% Define some paths 
-if strcmp(computer, 'MACI64')% on my laptop
-%     script_Path= '/Volumes/USB_DISK/TIMELIMIT_backup/SCRIPTS_ANALYSES/MEEG'; % here you find all the scripts for preprocessing/analysing MEEG data
-    data_Path = '/Volumes/USB_DISK/TIMELIMIT_backup/MEEG_fif_files'; % = parent_folder: all the raw data are stored here.
-    ft_Path = '/Users/bt_neurospin/matlab/FIELDTRIP/fieldtrip-20170405'; % Fieldtrip tools 
-    tool_Path= '/Users/bt_neurospin/Repos'; % where all the scripts should be
+
+%% Housekeeping
+
+% clear workspace (if needed)
+if input('clear all?  (1/0) ... ')
+    clearvars; close all;
 end
 
-% add some paths
-% addpath(genpath(script_Path)); % general pre-proc path
-addpath(genpath(tool_Path));
-addpath(ft_Path); ft_defaults; % start up fieldtrip [NEW]
-addpath([ft_Path '/engine']); % start up FT engines [NEW] NOTE: what is this actually doing? 
+% set paths (if needed)
+BT_setpath
 
-%% Choose the subject
-prompt={'Which participant do you want to look at?'};
-name='Subject number';
-numlines=1;
-answer=inputdlg(prompt,name,numlines);
-subjnum= str2double(answer);
-
-%% Move to the right folder/path
-
-parent_folder=  data_Path;
-subj_folders = dir(fullfile(parent_folder, 'subj*')); % 'Subject'
-current_subj_folder = fullfile(parent_folder, subj_folders(subjnum).name);
-cd(current_subj_folder);
+% choose subj & go to the right folder
+BT_getsubj
 
 %% Load preprocessed files
 
@@ -50,14 +34,24 @@ else
     load(sprintf('TimeLimit_2_subj%02d_EEG_clean_concat_rej_interp',subjnum))
 end
 
-
-%%
-% if subjnum== 17
-%     cfg.channel= [1:17 19:32 34:60]
-%     DATA_REJ_INTERP= ft_preprocessing(cfg,DATA_REJ_INTERP)
-% end
-
 %% Clean data more (need a function?)
+
+cfg=[];
+cfg.trials = good_trls;
+% cfg.demean = 'yes';
+cfg.preproc.lpfilter='yes';
+cfg.preproc.lpfreq= 50; %notch filter
+DATA_REJ_INTERP= ft_preprocessing(cfg,DATA_REJ_INTERP);
+
+% per condition 
+DATA_cond=[];
+for condi = 1:length(un_conds)
+    cfg=[];
+    cfg.trials= find(newcond == un_conds(condi));
+    DATA_cond{condi} = ft_preprocessing(cfg,DATA_REJ_INTERP);
+%     avg{condi} = ft_timelockanalysis(cfg,DATA_bl);
+%     mean_avg{condi} = avg{condi}.avg;
+end
 
 %% Do Spatial Filter here
 
@@ -70,12 +64,24 @@ Ind8 = [TRIALS.cond]' == 8;
 Ind16 = [TRIALS.cond]' == 16;
 Ind32 = [TRIALS.cond]' == 32;
 
+
 % HERE you make the data in 3D structure
 DATA_CUBE = myft_ftStruct2dataCube(DATA_REJ_INTERP);
+
+
+DATA_CUBEcond=[];
+for condi = 1:length(un_conds)
+    
+    DATA_CUBEcond{condi} = myft_ftStruct2dataCube(DATA_cond{condi});
+    
+end
 
 % just to visualize and find the peak 
 gavg = ft_timelockanalysis([],DATA_REJ_INTERP);
 cfg.layout = 'eeg_64_NM20884N.lay';
+% % cfg=[];
+% cfg.preproc.lpfilter='yes';
+% cfg.preproc.lpfreq= 50;
 figure
 ft_multiplotER(cfg,gavg);
 
@@ -84,20 +90,39 @@ TrialAvg= mean(DATA_CUBE,3);
 elec_clust= [20,21,29,30,31,39,40]; % cluster of 7 channels selected around Cz
 clustavg= mean(TrialAvg(elec_clust,:));
 
+TrialAvg= mean(DATA_CUBEcond{5},3);
+elec_clust= [20,21,29,30,31,39,40]; % cluster of 7 channels selected around Cz
+clustavg= mean(TrialAvg(elec_clust,:));
+
 %% Plot to see if there is a nice RP
 tAx = [0:2000]./SR - 3;
-figure; h=plot(tAx, clustavg)
-xlabel('Time (s)')
-ylabel('mean Amplitude (\muV)')
-title(['Subj ' num2str(subjnum) ', avg channels 20,21,29,30,31,39,40'])
-legend('All conditions', 'Location','NorthWest')
+figure; H=plot(tAx, clustavg);
+xlabel('Time (s)');
+ylabel('mean Amplitude (\muV)');
+title(['Subj ' num2str(subjnum) ', avg channels 20,21,29,30,31,39,40']);
+% legend('All conditions', 'Location','NorthWest');
+legend('Infinity condition', 'Location','NorthWest');
 
 %  save figure for further comparisons
 filename= [sprintf('Readiness_Potential_subj%02d', subjnum) '.png'];
-cd(parent_folder)
-saveas(h,filename)
+% cd(parent_folder)
+cd(results_Path);
+saveas(H,filename);
 
-%% ERROR
+%  save figure for further comparisons
+filename= [sprintf('Readiness_Potential_Inf_subj%02d', subjnum) '.png'];
+% cd(parent_folder)
+cd(results_Path);
+saveas(H,filename);
+
+%% ERROR TOPOPLOT
+
+% cfg = [];                            
+% % cfg.xlim = [0.3 0.5];                
+% % cfg.zlim = [0 6e-14];                
+% cfg.layout = 'eeg_64_NM20884N.lay';            
+% cfg.parameter = 'individual'; % the default 'avg' is not present in the data
+% figure; ft_topoplotER(cfg,clustavg'); colorbar
 
 % cfg.layout = 'eeg_64_NM20884N.lay';
 % figure; topoplot(cfg,clustavg');
@@ -174,12 +199,13 @@ saveas(j,filename)
 
 %% Save results for each participants in proper folder 
 
-timeseries_folder= [current_subj_folder,'/Timeseries'];
-if ~exist([timeseries_folder, '/SpatialFilter']); mkdir([timeseries_folder, '/SpatialFilter']); end
-cd(fullfile(timeseries_folder,'/SpatialFilter'));
+if input('Save SPATIAL FILTER results? ')
+    timeseries_folder= [current_subj_folder,'/Timeseries'];
+    if ~exist([timeseries_folder, '/SpatialFilter']); mkdir([timeseries_folder, '/SpatialFilter']); end
+    cd(fullfile(timeseries_folder,'/SpatialFilter'));
 
-save SF_results_newBl Ind* tWin nTrials trl msf d blRange SF_timecourses_bl tAx subjnum
-
+    save SF_results_newBl Ind* tWin nTrials trl msf d blRange SF_timecourses_bl tAx subjnum
+end
 %% Tell me what I have done so far
 disp(['subj ' num2str(subjnum) ' done'])
 
