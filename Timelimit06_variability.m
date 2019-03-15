@@ -6,7 +6,9 @@
 
 %{
 
-    OUTPUT: avg (avg{condi}), 
+    OUTPUT: avg{condi} in avg , across_stdev{condi}, within_std{condi} in
+    std
+ 
 
 
 %}
