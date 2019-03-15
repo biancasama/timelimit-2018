@@ -1,35 +1,34 @@
-%% Compute STD of the RP amplitude 
-% 7th November
-%% START: initialize path
-clear all
-close all
+%% Compute average & variability within subject
+%=========================================================================%
+% AUTHORs: Aaron & Yvonne; Bianca modified
+% DATE: February/March 2019
 
-addpath('/Users/bt_neurospin/matlab/FIELDTRIP/fieldtrip-20170405')
-addpath('/Users/bt_neurospin/matlab/matlab_internal/turbo_mne')
-addpath('/Volumes/USB_DISK/TIMELIMIT_backup/MEEG_fif_files')
+%{
 
-%% Choose the subject
-prompt={'Which participant do you want to look at?'};
-name='Subject number';
-numlines=1;
-answer=inputdlg(prompt,name,numlines);
-subjnum= str2double(answer);
+    OUTPUT that you need: SF_timecourses_bl (coming from trl + baseline),
+    msf and d.
 
-%% Move to the right folder/path
 
-parent_folder='/Volumes/USB_DISK/TIMELIMIT_backup/MEEG_fif_files'; %/Volumes/LaCie/128_usb_BACKUP/Project_Timelimit/fif_files_timelimit 
-subj_folders = dir(fullfile(parent_folder, 'subj*'));
-current_subj_folder = fullfile(parent_folder, subj_folders(subjnum).name);
-cd(current_subj_folder);
-% except subj01, find a solution
-if subjnum== 1
-    load('TimeLimit_v2_Resp_subj01_EEG_clean_concat_rej_interp.mat');
-else
-    filename=sprintf('TimeLimit_v2_Resp_subj%02d_EEG_clean_concat_rej_interp.mat',subjnum);
-    load(filename);
+%}
+%=========================================================================%
+%% START of the script 
+
+%% Housekeeping
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% clear workspace (if needed)
+if input('clear all?  (1/0) ... ')
+    clearvars; close all;
 end
-% load('BADcleanedtrls.mat'); % from script Timelimit00_cleandatamore
-load([current_subj_folder,'/Behavioral/GOOD_BEHAV.mat'])
+
+% set paths (if needed)
+BT_setpath
+
+% choose subj & go to the right folder
+BT_getsubj
+
+%% Load file 
+
+load([current_subj_folder,'/Behavioral/GOOD_BEHAV.mat']);
 
 %% average 
 % make use of DATA_REJ_INTERP

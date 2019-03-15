@@ -1,4 +1,4 @@
-%% Spatial Filter script
+%% Compute Spatial Filter within subject
 %=========================================================================%
 % AUTHORs: Aaron & Yvonne; Bianca modified
 % DATE: February/March 2019
