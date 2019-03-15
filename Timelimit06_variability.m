@@ -110,6 +110,7 @@ end
 % would be the mean only).
 
 %% Across-trial variability
+% WARNING: needs to be baseline corrected to replicate the same findings
 across_stdev=[];
 
     for condi = 1:length(un_conds)
@@ -153,22 +154,20 @@ for condi = 1:length(un_conds)
     hold on
 end
 
+%% Save variability timeseries
 
-%% Save stuff here
+% Create the folder if it doesn't exist already.
+if input('Save TIMELOCKED VARIABILITY results? RISK OF OVERWRITING  (1/0) ... ')
+    
+    timeseries_folder= [current_subj_folder, '/Timeseries'];
+         if ~exist(fullfile(timeseries_folder)); mkdir(fullfile(timeseries_folder)); end;
+    cd(timeseries_folder);
 
-% %create folder if it doesn't already exist
-% [status, msg] = mkdir('Timeseries');
-% cd(fullfile(current_subj_folder,'/Timeseries'));
+    save RP_std across_stdev within_std % choose a proper name and do not change it
+    
+end
 
-% for condi = 1:length(un_conds)
-%     avg{condi} = across_stdev{condi}; % because the fieldtrip function doesn't read in the var
-%     mean_avg{condi}.avg = avg{condi}.avg;
-%     across_stdev{condi}= avg{condi}.var;
-% end
-
-% save timeseries_EEG avg
-% save avg_EEG mean_avg
-save std_EEG across_stdev within_std 
+% save std_EEG across_stdev within_std 
 
 %% %% End (for now)
 disp(['END of the script for subj ' int2str(subjnum)])
