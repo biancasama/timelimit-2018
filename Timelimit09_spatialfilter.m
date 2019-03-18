@@ -155,11 +155,11 @@ saveas(H,filename);
 
 cfg = [];
 cfg.latency = [-0.2 0.2];
-Winavg = ft_selectdata(cfg,clustavg);
+Winavg = ft_selectdata(cfg,gavg);
 
 % Find minimum 
-[Y,I]= min(Winavg);
-Peak_Lat = I % or Y??
+[Amp,Lat]= min(Winavg.avg);
+Peak_Lat = Winavg.time(Lat)
 
 Peak_Win= [Peak_Lat-0.05 Peak_Lat+0]; %[Peak_Lat-0.05 Peak_Lat+0.05];
 
