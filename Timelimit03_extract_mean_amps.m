@@ -1,68 +1,57 @@
-%% Mean/Median RP amplitude for Timelimit2018 
+%% Mean/Median RP amplitude for a specific time window
 % ======================================================================= %
-% Script for extracting mean RP amplitude for plotting and stats
-% AUTHOR: Bianca Trovo (PhD student)
-% CREATED: July 2018. Modified: ***.
+% AUTHOR: Bianca Trovo (bianca.trovo@alumni.unitn.it)
+% DATE: created on July 2018.
+% EXPERIMENT: Timelimit_2018
 
-% Output:  datamatrix_premov_20{i,k}, mean_premov_amp_ch20(i,k),
-%          median_premov_amp_ch20(i, k).
-
-% HOW:
 
 %{ 
 
-1)Load Timelimit_*_subj**_EEG_clean_concat_rej_interp.mat.
-2)Create a new matrix for subjects (11) x conditions (5) and extraxt amp.
-3)Do mean and median of datamatrix_premov_**{i,k}.avg.
-4)Save datamatrix_premov_**, mean_premov_amp_ch**,median_premov_amp_ch**.
-5)Plot mean_all, median_all.
+    SCOPE: Script for extracting mean RP amplitude for plotting and stats.
+
+    OUTPUT: datamatrix_premov_20{i,k}, mean_premov_amp_ch20(i,k),
+          median_premov_amp_ch20(i, k).
+    
+    HOW:
+    
+        1)Load Timelimit_*_subj**_EEG_clean_concat_rej_interp.mat.
+        2)Create a new matrix for subjects (11) x conditions (5) and extraxt amp.
+        3)Do mean and median of datamatrix_premov_**{i,k}.avg.
+        4)Save datamatrix_premov_**, mean_premov_amp_ch**,median_premov_amp_ch**.
+        5)Plot mean_all, median_all.
 
 %}
 
 % FIX ME: the loop to load each preprocessed file still not working
-% NOTE: 
 
 %=========================================================================%
-%% BEGIN: set paths (27.09)
-fprintf('\n BEGIN: clear variables and set correct path \n')
-clearvars;
+%% START of the script 
 
-% Define some paths 
-if strcmp(computer, 'MACI64')% on my laptop
-    script_Path= '/Volumes/USB_DISK/TIMELIMIT_backup/SCRIPTS_ANALYSES/MEEG'; % here you find all the scripts for preprocessing/analysing MEEG data
-    data_Path = '/Volumes/USB_DISK/TIMELIMIT_backup/MEEG_fif_files'; % = parent_folder: all the raw data are stored here.
-    ft_Path = '/Users/bt_neurospin/matlab/FIELDTRIP/fieldtrip-20170405'; % Fieldtrip tools 
-    tool_Path= '/Users/bt_neurospin/matlab'; % other useful functions for matlab (written by Aaron)
+%% Housekeeping
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% clear workspace (if needed)
+if input('clear all?  (1/0) ... ')
+    clearvars; close all;
 end
 
-% add some paths
-addpath(genpath(script_Path)); % general pre-proc path
-addpath(genpath(tool_Path));
-addpath(ft_Path); ft_defaults; % start up fieldtrip [NEW]
-addpath([ft_Path '/engine']); % start up FT engines [NEW] NOTE: what is this actually doing? 
+% set paths (if needed)
+BT_setpath
 
-% Move to the right folder/path
-parent_folder= data_Path; 
-cd(parent_folder);
+% choose subj & go to the right folder
+BT_getsubj
 
-% % Parameters (29 Oct)
-subj_folders = dir(fullfile(parent_folder, 'subj*'))
-nSubjects= length(subj_folders);
+%% Consider only GOOD SUBJECTS 
 
-%% Load timelock files from all the subjects' folders
+% With clear Readiness Potential(= negative slope vs flat slope or positive slope).
+good_subjs = [2 3 5 6 7 8 10 11 13 15 17 18 20]; % % removed: subj04,subj14,subj19; remove subj 12 & 16 for channel 28 and 30.
+    nGoodSubjs = length(good_subjs);
 
-% Consider only good subjects with clear Readiness Potential (= negative
-% slope vs flat slope or positive slope).
-% FIX THIS
-% good_subjects = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17]; % changed % minus subj01, 04,09,14.
-good_subjects = [2 3 5 6 7 8 10 11 13 15 17];
-nGoodSubjects = length(good_subjects);
+%% Load timelocked averages from each subject's folders
 
-nConds = 5
-
-for i=1:20;
+for i=1:nSubjs;
+    
     if i==1
-%         fname = sprintf('subj%02d_noHPI/Timeseries/Amplitudes/Baseline_Haggard/timeseries_EEG.mat',good_subjects(i)); %good_subjects(i)
+%         fname = sprintf('subj%02d_noHPI/Timeseries/Amplitudes/Baseline_Haggard/timeseries_EEG.mat',good_subjs(i)); %nGoodSubjs(i)
         fname = sprintf('subj%02d_noHPI/Timeseries/Amplitudes/No_Baseline/timeseries0_EEG.mat',i);
     else
 %         fname = sprintf('subj%02d/Timeseries/Amplitudes/Baseline_Haggard/timeseries_EEG.mat',i);
@@ -88,7 +77,8 @@ datamatrix_premov= struct('ch20',[],'ch28', [],'ch30',[]);
 mean_premov_amp= struct('ch20',[],'ch28', [],'ch30',[]); 
 sem_premov_amp= struct('ch20',[],'ch28', [],'ch30',[]);
 
-for i= 1:20; %nGoodSubjects or nSubjects
+for i= 1:nSubjs; %nGoodSubjects or nSubjects
+    
     for k= 1:5
         
 %         avg2matrix{i,k}= pickupSub(i).avg{k}; %avg_EEG
@@ -118,12 +108,18 @@ for i= 1:20; %nGoodSubjects or nSubjects
     end
 end
 
-%% save
-% FIX ME IN A SMART WAY
-resfolder = fullfile(parent_folder,'/Results/Timeseries/Amplitudes/No_Baseline');
-cd(resfolder);
+%% Save
 
-save datamatrix2_premov datamatrix_premov; save mean_premov2_amp mean_premov_amp 
+% Create the folder if it doesn't exist already.
+if input('Save MEAN AMPLITUDE results? RISK OF OVERWRITING  (1/0) ... ')
+    
+    results_folder= [parent_folder, '/Results'];
+         if ~exist(fullfile(parent_folder)); mkdir(fullfile(results_folder)); end;
+    cd(results_folder);
+
+   save datamatrix_premov datamatrix_premov; save mean_premov_amp mean_premov_amp 
+   
+end
 
 %% PLOT (24 Oct 2018)
 cd(resfolder);
@@ -218,37 +214,37 @@ title('Channel Cz')
 %mean_premov_amp(:,3) = [];
 
 % column 1: dependent measure
-Xamps= mean_premov_amp(:);
-
-%Column2: IV, Independent variable (conditions, 1:5 x17)
-Xcond= repmat([1:nConds],nGoodSubjects,1)
-
-%Column3: Subjects, 11
-Xsubj = repmat([1:nGoodSubjects]',1,nConds)
-
-% MATRIX 
-X = [Xamps(:) Xcond(:) Xsubj(:)]
-
-%% now run anova
-
-[x,y,z]=RMAOV1(X)
-
-% F(4,10) = 2.951, p=0.0315
-
-%% extract values for post hoc t-tests
-
-[H54,P54,CI54,STATS54]= ttest(mean_premov_amp(:,5), mean_premov_amp(:,4))
-
-[H43,P43,CI43,STATS43]= ttest(mean_premov_amp(:,4), mean_premov_amp(:,3))
-
-[H32,P32,CI32,STATS32]= ttest(mean_premov_amp(:,3), mean_premov_amp(:,2))
-
-[H21,P21,CI21,STATS21]= ttest(mean_premov_amp(:,2), mean_premov_amp(:,1))
-
-
-[H53,P53,CI53,STATS53]= ttest(mean_premov_amp(:,5), mean_premov_amp(:,3))
-
-[H52,P52,CI52,STATS52]= ttest(mean_premov_amp(:,5), mean_premov_amp(:,2))
-
-[H51,P51,CI51,STATS51]= ttest(mean_premov_amp(:,5), mean_premov_amp(:,1))
-
+% Xamps= mean_premov_amp(:);
+% 
+% %Column2: IV, Independent variable (conditions, 1:5 x17)
+% Xcond= repmat([1:nConds],nGoodSubjects,1)
+% 
+% %Column3: Subjects, 11
+% Xsubj = repmat([1:nGoodSubjects]',1,nConds)
+% 
+% % MATRIX 
+% X = [Xamps(:) Xcond(:) Xsubj(:)]
+% 
+% %% now run anova
+% 
+% [x,y,z]=RMAOV1(X)
+% 
+% % F(4,10) = 2.951, p=0.0315
+% 
+% %% extract values for post hoc t-tests
+% 
+% [H54,P54,CI54,STATS54]= ttest(mean_premov_amp(:,5), mean_premov_amp(:,4))
+% 
+% [H43,P43,CI43,STATS43]= ttest(mean_premov_amp(:,4), mean_premov_amp(:,3))
+% 
+% [H32,P32,CI32,STATS32]= ttest(mean_premov_amp(:,3), mean_premov_amp(:,2))
+% 
+% [H21,P21,CI21,STATS21]= ttest(mean_premov_amp(:,2), mean_premov_amp(:,1))
+% 
+% 
+% [H53,P53,CI53,STATS53]= ttest(mean_premov_amp(:,5), mean_premov_amp(:,3))
+% 
+% [H52,P52,CI52,STATS52]= ttest(mean_premov_amp(:,5), mean_premov_amp(:,2))
+% 
+% [H51,P51,CI51,STATS51]= ttest(mean_premov_amp(:,5), mean_premov_amp(:,1))
+% 

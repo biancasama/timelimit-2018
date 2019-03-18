@@ -34,28 +34,42 @@ else
     load(sprintf('TimeLimit_2_subj%02d_EEG_clean_concat_rej_interp',subjnum))
 end
 
-%% Clean data more (need a function?)
+%% Clean data more and prepare for Spatial Filter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Setting up indexes for getting only the good trials
+good_trls = setdiff([1:length(DATA_REJ_INTERP.trial)],idx_allbadtrls);
+isequal(idx_goodtrls',good_trls)
+% redundant but we redo it just in case
+cond= [TRIALS.cond]; %we put all the conditions in a row
+cond(cond==32) = Inf;
+un_conds = unique(cond);
+newcond= cond(good_trls);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cfg=[];
 cfg.trials = good_trls;
 % cfg.demean = 'yes';
 cfg.preproc.lpfilter='yes';
-cfg.preproc.lpfreq= 50; %notch filter
-DATA_REJ_INTERP= ft_preprocessing(cfg,DATA_REJ_INTERP);
+cfg.preproc.lpfreq= 30; %notch filter 50
+    DATA_REJ_INTERP= ft_preprocessing(cfg,DATA_REJ_INTERP);
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % per condition 
 DATA_cond=[];
 for condi = 1:length(un_conds)
+    
     cfg=[];
     cfg.trials= find(newcond == un_conds(condi));
     DATA_cond{condi} = ft_preprocessing(cfg,DATA_REJ_INTERP);
-%     avg{condi} = ft_timelockanalysis(cfg,DATA_bl);
-%     mean_avg{condi} = avg{condi}.avg;
+
 end
 
 %% Do Spatial Filter here
 
-% define parameters here (sampling Rate, Timelock, indexes condition)
+% Define parameters here (sampling Rate, Timelock, indexes condition)
 SR=500;
 t0= 3;
 Ind2 = [TRIALS.cond]' == 2;
@@ -64,11 +78,15 @@ Ind8 = [TRIALS.cond]' == 8;
 Ind16 = [TRIALS.cond]' == 16;
 Ind32 = [TRIALS.cond]' == 32;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % HERE you make the data in 3D structure
 DATA_CUBE = myft_ftStruct2dataCube(DATA_REJ_INTERP);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Per condition
 DATA_CUBEcond=[];
 for condi = 1:length(un_conds)
     
@@ -76,7 +94,9 @@ for condi = 1:length(un_conds)
     
 end
 
-% just to visualize and find the peak 
+%% Visualization of ROI around Cz before applying SF
+
+
 gavg = ft_timelockanalysis([],DATA_REJ_INTERP);
 cfg.layout = 'eeg_64_NM20884N.lay';
 % % cfg=[];
@@ -85,34 +105,30 @@ cfg.layout = 'eeg_64_NM20884N.lay';
 figure
 ft_multiplotER(cfg,gavg);
 
-% look at the data before applying SF
-TrialAvg= mean(DATA_CUBE,3);
-elec_clust= [20,21,29,30,31,39,40]; % cluster of 7 channels selected around Cz
-clustavg= mean(TrialAvg(elec_clust,:));
+% All conditions averaged together
+    TrialAvg= mean(DATA_CUBE,3);
+    elec_clust= [20,21,29,30,31,39,40]; % cluster of 7 channels selected around Cz
+    clustavg= mean(TrialAvg(elec_clust,:));
 
-TrialAvg= mean(DATA_CUBEcond{5},3);
-elec_clust= [20,21,29,30,31,39,40]; % cluster of 7 channels selected around Cz
-clustavg= mean(TrialAvg(elec_clust,:));
+% Per condition
+    TrialAvg= mean(DATA_CUBEcond{5},3);
+    elec_clust= [20,21,29,30,31,39,40]; % cluster of 7 channels selected around Cz
+    clustavg= mean(TrialAvg(elec_clust,:));
 
 %% Plot to see if there is a nice RP
+
 tAx = [0:2000]./SR - 3;
 figure; H=plot(tAx, clustavg);
 xlabel('Time (s)');
 ylabel('mean Amplitude (\muV)');
 title(['Subj ' num2str(subjnum) ', avg channels 20,21,29,30,31,39,40']);
-% legend('All conditions', 'Location','NorthWest');
-legend('Infinity condition', 'Location','NorthWest');
+legend('All conditions', 'Location','NorthWest');
+% legend('Infinity condition', 'Location','NorthWest');
 
 %  save figure for further comparisons
 filename= [sprintf('Readiness_Potential_subj%02d', subjnum) '.png'];
 % cd(parent_folder)
-cd(results_Path);
-saveas(H,filename);
-
-%  save figure for further comparisons
-filename= [sprintf('Readiness_Potential_Inf_subj%02d', subjnum) '.png'];
-% cd(parent_folder)
-cd(results_Path);
+% cd(results_Path);
 saveas(H,filename);
 
 %% ERROR TOPOPLOT
@@ -131,9 +147,20 @@ saveas(H,filename);
 % cd(parent_folder)
 % saveas(k,filename3)
 
-%% Define window for Spatial Filter based on the peak amplitude
+%% Define window for Spatial Filter based on the peak amplitude (CRITICAL PART)
 
-Peak_Lat= cursor_info.Position(1);
+% Peak_Lat= cursor_info.Position(1);
+
+% Take window of interest
+
+cfg = [];
+cfg.latency = [-0.2 0.2];
+Winavg = ft_selectdata(cfg,clustavg);
+
+% Find minimum 
+[Y,I]= min(Winavg);
+Peak_Lat = I % or Y??
+
 Peak_Win= [Peak_Lat-0.05 Peak_Lat+0]; %[Peak_Lat-0.05 Peak_Lat+0.05];
 
 % use the time difference to get the spatial filter
@@ -157,6 +184,8 @@ IndAll = true(nTrials,1);
 [trl,msf] = ems_ncond(DATA_CUBE,IndAll,[], @spf_basic_2time_diff,tWin,t0,SR);
 
 %% using the peak to get the spatial filter
+% Explain here better which method it is
+
 % d = mean(mean(DATA_CUBE(:,seconds2samples(tWin{2},t0,SR),:),3),2);
 % d = d ./ norm(d);
 % for i=1:162
@@ -167,12 +196,14 @@ IndAll = true(nTrials,1);
 % figure;topoplot(cfg,d);
 % colorbar
 
+%% Apply baseline peak-based
 % blRange = [0 0.050]; % RP peak
 blRange= Peak_Win;
 % blRange = [0.225 0.275]; % somato-motor potential
 SF_timecourses_bl = baseline_correct(trl,SR,3,blRange);
 
-%% Plot the time course after the Spatial Filter
+%% Visualization of the time course after the Spatial Filter
+
 figure; k=plot(tAx,mean(SF_timecourses_bl))
 xlabel('Time (s)')
 ylabel('mean Amplitude (\muV)')
@@ -184,7 +215,7 @@ filename= [sprintf('Spatial_filter_subj%02d', subjnum) '.png'];
 cd(parent_folder)
 saveas(k,filename)
 
-%% Plot the topography after the Spatial Filter
+%% Visualization of the topography after the Spatial Filter
 
 meanSF = mean(msf,2);
 cfg.layout = 'eeg_64_NM20884N.lay';
