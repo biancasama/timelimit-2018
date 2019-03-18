@@ -1,6 +1,6 @@
 %% Clean electrophysiological data from behavioral bad trials
 %=========================================================================%
-% AUTHOR: Bianca Trovo
+% AUTHOR: Bianca Trovo (bianca.trovo@alumni.unitn.it)
 % DATE: October/November 2018
 % EXPERIMENT: Timelimit_2018
 
@@ -20,7 +20,7 @@
 
 %}
 
-% FIX ME: outliers part not implemented or not working yet. Not sure if we
+% FIXME: outliers part not implemented or not working yet. Not sure if we
 % need to divide by condition since we do this in the averaging part. 
 %=========================================================================%
 %% START of the script 

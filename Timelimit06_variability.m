@@ -1,6 +1,6 @@
 %% Compute average & variability within subject
 %=========================================================================%
-% AUTHORs: Bianca Trovo (bianca.trovo@alumni.unitn.it)
+% AUTHOR: Bianca Trovo (bianca.trovo@alumni.unitn.it)
 % DATE: created on November 2018
 % EXPERIMENT: Timelimit_2018
 
@@ -16,7 +16,6 @@
     FIXME: loop for within-trial variability (it doesn't compute for all
     channels).
  
-
 
 %}
 %=========================================================================%
