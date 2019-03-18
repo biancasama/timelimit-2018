@@ -1,13 +1,20 @@
 %% Compute average & variability within subject
 %=========================================================================%
-% AUTHORs: Bianca
-% DATE: November 2018
+% AUTHORs: Bianca Trovo (bianca.trovo@alumni.unitn.it)
+% DATE: created on November 2018
 % EXPERIMENT: Timelimit_2018
 
 %{
 
+    SCOPE: compute the timelocked average (mean RP/RF) and the EEG
+    variability (std RP) prior to self-initiated action (event: motor response). For
+    the latter we follow Khalighinejad et al. 2018.
+
     OUTPUT: avg{condi} in avg , across_stdev{condi}, within_std{condi} in
-    std
+    std.
+
+    FIXME: loop for within-trial variability (it doesn't compute for all
+    channels).
  
 
 
