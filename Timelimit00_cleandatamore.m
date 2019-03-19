@@ -63,12 +63,12 @@ ntrials= length([TRIALS.rt]');
     resptimes= waitingtimes-3.0; % from Zafer's code, we know for sure it's 3 sec exaclty.
 
     % Main variable that we want
-    idx_allbadtrls=find(resptimes <0|resptimes > conds); %<=0.2 replaced with 0
+    idx_allbadtrls=find(resptimes <0|resptimes >= conds); %<=0.2 replaced with 0
 
     % Extra variables 
-    idx_tooEarly=find(resptimes <0); %<=0.2 replaced with 0
-    idx_tooLate= find(resptimes > conds);
-    idx_goodtrls= find(resptimes >0 & resptimes < conds);
+    idx_tooEarly=find(resptimes <= 0); %<=0.2 replaced with 0
+    idx_tooLate= find(resptimes >= conds);
+    idx_goodtrls= find(resptimes >0 & resptimes <= conds);
     goodrespsall= resptimes(idx_goodtrls); % in seconds
     whichEarly= resptimes(idx_tooEarly);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -81,7 +81,7 @@ ntrials= length([TRIALS.rt]');
        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% newconds= conds(idx_goodtrls); % recomputed in script for average/variability        
+newconds= conds(idx_goodtrls); % recomputed in script for average/variability        
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -90,28 +90,28 @@ ntrials= length([TRIALS.rt]');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Trials
-% good_resps_cond={}; TF={}; outliers={};newgood_resps={};
-%     
-%     for condi = 1:length(uconds)
-%         
-%         good_resps_cond{condi}= goodrespsall(find(newconds == uconds(condi))); % BEFORE removing outliers 
-%         TF{condi} = isoutlier(good_resps_cond{condi}, 'median');
-%         outliers{condi}= good_resps_cond{condi}(TF{condi});
-%         newgood_resps{condi}= good_resps_cond{condi}(~TF{condi}); % WITHOUT OUTLIERS
-%         
-%     end
-% 
-% % Indexes
-% idx_goodxcond={};idxTF={};idx_outl={};idx_newgoodresps={};
-% 
-%     for condi = 1:length(uconds)
-%         
-%         idx_goodxcond{condi}=idx_goodtrls(find(newconds == uconds(condi))); % BEFORE removing outliers
-%         idxTF{condi} = idx_goodxcond{condi}(TF{condi});
-% %         idx_outl{condi}= idx_goodxcond{condi}(idxTF{condi});
-% %         idx_newgoodresps{condi}=idx_goodxcond{condi}(~idxTF{condi});
-%         
-%     end
+good_resps_cond={}; TF={}; outliers={};newgood_resps={};
+    
+    for condi = 1:length(uconds)
+        
+        good_resps_cond{condi}= goodrespsall(find(newconds == uconds(condi))); % BEFORE removing outliers 
+        TF{condi} = isoutlier(good_resps_cond{condi}, 'median');
+        outliers{condi}= good_resps_cond{condi}(TF{condi});
+        newgood_resps{condi}= good_resps_cond{condi}(~TF{condi}); % WITHOUT OUTLIERS
+        
+    end
+
+% Indexes
+idx_goodxcond={};idxTF={};idx_outl={};idx_newgoodresps={};
+
+    for condi = 1:length(uconds)
+        
+        idx_goodxcond{condi}=idx_goodtrls(find(newconds == uconds(condi))); % BEFORE removing outliers
+        idxTF{condi} = idx_goodxcond{condi}(TF{condi});
+%         idx_outl{condi}= idx_goodxcond{condi}(idxTF{condi});
+%         idx_newgoodresps{condi}=idx_goodxcond{condi}(~idxTF{condi});
+        
+    end
 
 % ultimate trials per condition without outliers
 % good_behav_rt{condi}= idx_outl(find(newconds == uconds(condi))); 
