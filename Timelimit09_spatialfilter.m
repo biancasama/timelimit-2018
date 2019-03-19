@@ -16,10 +16,9 @@
 %% Housekeeping
 
 % clear workspace (if needed)
-if input('clear all?  (1/0) ... ')
-    clearvars; close all;
-end
 
+if input('clear all?  (1/0) ... '); clearvars; close all; end
+    
 % set paths (if needed)
 BT_setpath
 
@@ -125,7 +124,7 @@ ft_multiplotER(cfg,gavg);
 %% Plot to see if there is a nice RP
 
 tAx = [0:2000]./SR - 3;
-g=figure; plot(tAx, clustavg);
+h=figure; plot(tAx, clustavg, 'Linewidth',2);
 xlabel('Time (s)');
 ylabel('mean Amplitude (\muV)');
 title(['Subj ' num2str(subjnum) ', avg channels 20,21,29,30,31,39,40']);
@@ -135,7 +134,9 @@ legend('All conditions', 'Location','NorthWest');
 %  save figure for further comparisons
 filename= [sprintf('Readiness_Potential_subj%02d', subjnum) '.png'];
 cd(figures_Path);
-saveas(g,filename);
+saveas(h,filename);
+
+close; clear h;
 
 %% TOPOPLOT
 
@@ -149,6 +150,8 @@ title(['Subj ' num2str(subjnum) ', Topography RP']);
 filename= [sprintf('Readiness_Potential_topography_subj%02d', subjnum) '.png'];
 cd(figures_Path);
 saveas(h,filename);
+
+close; clear h;
 
 %% Define window for Spatial Filter based on the peak amplitude (CRITICAL PART)
 
@@ -166,11 +169,13 @@ selclustavg= mean(Winavg.avg(elec_clust,:));
 [Amp,Lat]= min(selclustavg);
 Peak_Lat = Winavg.time(Lat);
 
-l=figure; plot(Winavg.time, selclustavg);
+h=figure; plot(Winavg.time, selclustavg, 'Linewidth',2);
 % click with cursor first 
 filename= [sprintf('subj%02d_peakLat', subjnum) '.png'];
 cd(figures_Path);
-saveas(l,filename);
+saveas(h,filename);
+
+close; clear h;
 
 Peak_Win= [Peak_Lat-0.05 Peak_Lat+0]; %[Peak_Lat-0.05 Peak_Lat+0.05];
 
@@ -215,7 +220,7 @@ SF_timecourses_bl = baseline_correct(trl,SR,3,blRange);
 
 %% Visualization of the time course after the Spatial Filter
 
-g=figure; plot(tAx,mean(SF_timecourses_bl));
+h=figure; plot(tAx,mean(SF_timecourses_bl), 'Linewidth',2);
 xlabel('Time (s)');
 ylabel('mean Amplitude (\muV)');
 title(['Subj ' num2str(subjnum) ', Spatial filter, baseline [ ' num2str(Peak_Win) ' ]']);
@@ -224,7 +229,8 @@ legend('All conditions', 'Location','NorthWest');
 % save figure for further comparisons
 filename= [sprintf('Spatial_filter_subj%02d', subjnum) '.png'];
 cd(figures_Path);
-saveas(g,filename);
+saveas(h,filename);
+close; clear h;
 
 %% Visualization of the topography after the Spatial Filter
 
@@ -238,6 +244,7 @@ colorbar
 filename= [sprintf('Spatial_filter_topography_subj%02d', subjnum) '.png'];
 cd(figures_Path);
 saveas(h,filename);
+close; clear h;
 
 %% Save results for each participant in their own folder 
 
@@ -262,7 +269,6 @@ save(filename, 'Ind*', 'tWin', 'nTrials', 'trl', 'msf', 'blRange', 'SF_timecours
 disp(['subj ' num2str(subjnum) ' done']);
 
 close all;
-
 clearvars;
 
 %% End of the script
