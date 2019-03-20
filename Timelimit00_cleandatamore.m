@@ -63,12 +63,12 @@ ntrials= length([TRIALS.rt]');
     resptimes= waitingtimes-3.0; % from Zafer's code, we know for sure it's 3 sec exaclty.
 
     % Main variable that we want
-    idx_allbadtrls=find(resptimes <0|resptimes >= conds); %<=0.2 replaced with 0
+    idx_allbadtrls=find(resptimes <= 0|resptimes >= conds); %<=0.2 replaced with 0
 
     % Extra variables 
     idx_tooEarly=find(resptimes <= 0); %<=0.2 replaced with 0
     idx_tooLate= find(resptimes >= conds);
-    idx_goodtrls= find(resptimes >0 & resptimes <= conds);
+    idx_goodtrls= find(resptimes > 0 & resptimes < conds);
     goodrespsall= resptimes(idx_goodtrls); % in seconds
     whichEarly= resptimes(idx_tooEarly);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
