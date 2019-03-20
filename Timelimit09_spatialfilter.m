@@ -29,7 +29,7 @@ clear answer LevelAnalysis name numlines prompt subj_folders
 
 %% Load preprocessed files
 
-if subjnum== 1 || subjnum== 18 || subjnum== 19 || subjnum== 20 || subjnum== 21 || subjnum== 22
+if subjnum== 1 || subjnum== 17 || subjnum== 18 || subjnum== 19 || subjnum== 20 || subjnum== 21 || subjnum== 22
     load(sprintf('TimeLimit_v2_Resp_subj%02d_EEG_clean_concat_rej_interp',subjnum))
 else
     load(sprintf('TimeLimit_2_subj%02d_EEG_clean_concat_rej_interp',subjnum))
@@ -171,6 +171,7 @@ Peak_Lat = Winavg.time(Lat);
 
 h=figure; plot(Winavg.time, selclustavg, 'Linewidth',2);
 % click with cursor first 
+
 filename= [sprintf('subj%02d_peakLat', subjnum) '.png'];
 cd(figures_Path);
 saveas(h,filename);
@@ -190,7 +191,7 @@ M2=mean(clustavg(seconds2samples(tWin{2},t0,SR)));
 if M2-M1 < -1e-6 % 1 microVolt
     display('OK')
 else
-    display('NOT OK')
+    disp('NOT OK')
 end
 
 %% SPATIAL FILTER here
@@ -234,7 +235,7 @@ close; clear h;
 
 %% Visualization of the topography after the Spatial Filter
 
-meanSF = mean(msf,2);
+meanSF = mean(msf,2); 
 cfg.layout = 'eeg_64_NM20884N.lay';
 h=figure;topoplot(cfg,meanSF);
 title(['Subj ' num2str(subjnum) ', Topography Spatial filter, baseline [ ' num2str(Peak_Win) ' ]']);
