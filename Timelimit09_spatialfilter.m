@@ -51,7 +51,7 @@ cond(cond==32) = Inf;
 un_conds = unique(cond);
 newcond= cond(good_trls);
 
-clear cond un_conds 
+% clear cond un_conds 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -79,7 +79,20 @@ cfg.lpfreq= 30; %notch filter 50
 % Define parameters here (sampling Rate, Timelock, indexes condition)
 SR=500;
 t0= 3;
-% Ind2 = [TRIALS.cond]' == 2;
+
+if isequal(numel(find(newcond==2)),numel(idx_goodxcond{1}))==1; Ind2 = (newcond'==2); end;
+    
+if isequal(numel(find(newcond==4)),numel(idx_goodxcond{2}))==1; Ind4 = (newcond'==4); end;
+    
+if isequal(numel(find(newcond==8)),numel(idx_goodxcond{3}))==1; Ind8 = (newcond'==8); end;
+    
+if isequal(numel(find(newcond==16)),numel(idx_goodxcond{4}))==1; Ind16 = (newcond'==16); end;
+    
+if isequal(numel(find(newcond==Inf)),numel(idx_goodxcond{5}))==1; IndInf = (newcond'==Inf); end;
+
+    if isequal(Ind2, Ind4, Ind8, Ind16, IndInf)==0; disp('CORRECT'); else disp('You have done something wrong'); end;
+    if isequal(numel(Ind2), numel(Ind4), numel(Ind8), numel(Ind16), numel(IndInf))==1; disp('CORRECT'); else disp('You have done something wrong'); end;
+
 % Ind4 = [TRIALS.cond]' == 4;
 % Ind8 = [TRIALS.cond]' == 8;
 % Ind16 = [TRIALS.cond]' == 16;
@@ -153,6 +166,17 @@ saveas(h,filename);
 
 close; clear h;
 
+%% Save results of each participant in general folder
+
+timeseries_folder= [results_Path,'/Timeseries'];
+    if ~exist([results_Path, '/Timeseries']); mkdir([results_Path, '/Timeseries']); end
+cd(fullfile(timeseries_folder));
+
+filename= [sprintf('subj%02d_Timelockavg_cube', subjnum)];
+save(filename, 'TrialAvg');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Define window for Spatial Filter based on the peak amplitude (CRITICAL PART)
 
 % Peak_Lat= cursor_info.Position(1);
