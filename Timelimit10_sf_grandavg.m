@@ -1,10 +1,10 @@
 
-fSR = 500;
+SR = 500;
 t0 = 3;
 tAx = [0:2000]./SR - 3;
 
 d = dir('subj*');
-or i=1:22
+for i=1:22
 %     fname = sprintf('%s/Timeseries/SpatialFilter/SF_results.mat',d(i).name);
 fname= sprintf('subj%02d_SF_results_newBl', i)
     S{i} = load(fname);
