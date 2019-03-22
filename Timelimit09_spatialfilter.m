@@ -60,19 +60,19 @@ cfg.trials = good_trls;
 % cfg.demean = 'yes';
 cfg.lpfilter='yes';
 cfg.lpfreq= 30; %notch filter 50
-    DATA_REJ_INTERP= ft_preprocessing(cfg,DATA_REJ_INTERP);
+    DATA_CLEANED= ft_preprocessing(cfg,DATA_REJ_INTERP);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % per condition 
-%     DATA_cond=[];
-%     for condi = 1:length(un_conds)
-% 
-%         cfg=[];
-%         cfg.trials= find(newcond == un_conds(condi));
-%         DATA_cond{condi} = ft_preprocessing(cfg,DATA_REJ_INTERP);
-% 
-%     end
+    DATA_CLcond=[];
+    for condi = 1:length(un_conds)
+
+        cfg=[];
+        cfg.trials= find(newcond == un_conds(condi));
+        DATA_CLcond{condi} = ft_preprocessing(cfg,DATA_REJ_INTERP);
+
+    end
 
 %% Do Spatial Filter here
 
@@ -102,26 +102,39 @@ if isequal(numel(find(newcond==Inf)),numel(idx_goodxcond{5}))==1; IndInf = (newc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % HERE you make the data in 3D structure
-DATA_CUBE = myft_ftStruct2dataCube(DATA_REJ_INTERP);
+DATA_CUBE = myft_ftStruct2dataCube(DATA_CLEANED);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Per condition
-% DATA_CUBEcond=[];
-% for condi = 1:length(un_conds)
-%     
-%     DATA_CUBEcond{condi} = myft_ftStruct2dataCube(DATA_cond{condi});
-%     
-% end
+DATA_3Dcond=[];
+for condi = 1:length(un_conds)
+    
+    DATA_3Dcond{condi} = myft_ftStruct2dataCube(DATA_CLcond{condi});
+    
+end
+
+
+%% Save results of each participant in general folder
+
+readydata_folder= [results_Path,'/Prep_Clean'];
+    if ~exist([results_Path, '/Prep_Clean']); mkdir([results_Path, '/Prep_Clean']); end
+cd(fullfile(readydata_folder));
+
+filename= [sprintf('subj%02d_DATA_READY', subjnum)];
+save(filename, 'DATA_CLEANED','DATA_CLcond');
+filename= [sprintf('subj%02d_DATA_CUBES', subjnum)];
+save(filename, 'DATA_CUBE', 'DATA_3Dcond');
 
 %% Visualization of ROI around Cz before applying SF
 
 cfg=[];
-gavg = ft_timelockanalysis([],DATA_REJ_INTERP);
+gavg = ft_timelockanalysis([],DATA_CLEANED);
 cfg=[];
 cfg.layout = 'eeg_64_NM20884N.lay';
 % already filtered at 30Hz
 figure
+cfg.linewidth = 2;
 ft_multiplotER(cfg,gavg);
 
 % All conditions averaged together
@@ -129,10 +142,21 @@ ft_multiplotER(cfg,gavg);
     elec_clust= [20,21,29,30,31,39,40]; % cluster of 7 channels selected around Cz
     clustavg= mean(TrialAvg(elec_clust,:));
 
-% Per condition
-%     TrialAvg= mean(DATA_CUBEcond{5},3);
-%     elec_clust= [20,21,29,30,31,39,40]; % cluster of 7 channels selected around Cz
-%     clustavg= mean(TrialAvg(elec_clust,:));
+% Per condition [SOMETHING WRONG]
+% for condi = 1:length(un_conds)
+%     TrialAvg_cond{condi}= mean(DATA_3Dcond{condi},3);
+% %     elec_clust= [20,21,29,30,31,39,40]; % cluster of 7 channels selected around Cz
+% %     clustavg_cond= mean(TrialAvg_cond(elec_clust,:));
+% end
+
+%% Save results of each participant in general folder
+
+timeseries_folder= [results_Path,'/Timeseries'];
+    if ~exist([results_Path, '/Timeseries']); mkdir([results_Path, '/Timeseries']); end
+cd(fullfile(timeseries_folder));
+
+filename= [sprintf('subj%02d_Timelockavg', subjnum)];
+save(filename, 'gavg','TrialAvg');
 
 %% Plot to see if there is a nice RP
 
@@ -151,10 +175,28 @@ saveas(h,filename);
 
 close; clear h;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+tAx = [0:2000]./SR - 3;
+h=figure; plot(tAx, TrialAvg(40,:), 'Linewidth',2);
+% h=figure; plot(tAx, TrialAvg(30,:), 'Linewidth',2);
+xlabel('Time (s)');
+ylabel('mean Amplitude (\muV)');
+title(['Subj ' num2str(subjnum) ', avg Cz']);
+legend('All conditions', 'Location','NorthWest');
+% legend('Infinity condition', 'Location','NorthWest');
+
+%  save figure for further comparisons
+filename= [sprintf('RP_Cz_subj%02d', subjnum) '.png'];
+cd(figures_Path);
+saveas(h,filename);
+
+close; clear h;
+
 %% TOPOPLOT
 
 cfg = [];                            
-cfg.xlim = [-1 -0.2];                               
+cfg.xlim = [-1 -0.2]; 
 cfg.layout = 'eeg_64_NM20884N.lay';            
 h=figure; ft_topoplotER(cfg,gavg); colorbar
 title(['Subj ' num2str(subjnum) ', Topography RP']);
@@ -165,15 +207,6 @@ cd(figures_Path);
 saveas(h,filename);
 
 close; clear h;
-
-%% Save results of each participant in general folder
-
-timeseries_folder= [results_Path,'/Timeseries'];
-    if ~exist([results_Path, '/Timeseries']); mkdir([results_Path, '/Timeseries']); end
-cd(fullfile(timeseries_folder));
-
-filename= [sprintf('subj%02d_Timelockavg_cube', subjnum)];
-save(filename, 'TrialAvg');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -218,6 +251,8 @@ else
     disp('NOT OK')
 end
 
+RP_test= M2-M1;
+
 %% SPATIAL FILTER here
 % We apply on all the conditions to be fair 
 nTrials = size(DATA_CUBE,3);
@@ -248,8 +283,8 @@ SF_timecourses_bl = baseline_correct(trl,SR,3,blRange);
 h=figure; plot(tAx,mean(SF_timecourses_bl), 'Linewidth',2);
 xlabel('Time (s)');
 ylabel('mean Amplitude (\muV)');
-title(['Subj ' num2str(subjnum) ', Spatial filter, baseline [ ' num2str(Peak_Win) ' ]']);
-legend('All conditions', 'Location','NorthWest');
+title(['Subj ' num2str(subjnum) ', Spatial filter, baseline [ ' num2str(tWin{2}) ' ]']);
+legend('All conditions', 'Location','best');
 
 % save figure for further comparisons
 filename= [sprintf('Spatial_filter_subj%02d', subjnum) '.png'];
@@ -261,8 +296,9 @@ close; clear h;
 
 meanSF = mean(msf,2); 
 cfg.layout = 'eeg_64_NM20884N.lay';
+% cfg.xlim = [-1 -0.2];
 h=figure;topoplot(cfg,meanSF);
-title(['Subj ' num2str(subjnum) ', Topography Spatial filter, baseline [ ' num2str(Peak_Win) ' ]']);
+title(['Subj ' num2str(subjnum) ', Topography Spatial filter, baseline [ ' num2str(tWin{2}) ' ]']);
 colorbar
 
 % save figure for further comparisons
@@ -270,6 +306,20 @@ filename= [sprintf('Spatial_filter_topography_subj%02d', subjnum) '.png'];
 cd(figures_Path);
 saveas(h,filename);
 close; clear h;
+
+% comparison with before SF, sSubj 22ame window
+
+cfg = [];                            
+cfg.xlim= [tWin{1}(1) tWin{2}(2)];filename= [sprintf('subj%02d_SF_results_newBl', subjnum)];
+save(filename, 'Ind*', 'tWin', 'nTrials', 'trl', 'msf', 'blRange', 'SF_timecourses_bl', 'tAx', 'subjnum', 'RP_test');
+cfg.layout = 'eeg_64_NM20884N.lay';            
+h=figure; ft_topoplotER(cfg,gavg); colorbar
+title(['Subj ' num2str(subjnum) ', Topography RP']);
+
+%  save figure for further comparisons
+filename= [sprintf('Readiness_Potential_top_comparison_subj%02d', subjnum) '.png'];
+cd(figures_Path);
+saveas(h,filename);
 
 %% Save results for each participant in their own folder 
 
@@ -288,7 +338,7 @@ spatialfilter_folder= [results_Path,'/SpatialFilter'];
 cd(fullfile(spatialfilter_folder));
 
 filename= [sprintf('subj%02d_SF_results_newBl', subjnum)];
-save(filename, 'Ind*', 'tWin', 'nTrials', 'trl', 'msf', 'blRange', 'SF_timecourses_bl', 'tAx', 'subjnum');
+save(filename, 'Ind*', 'tWin', 'nTrials', 'trl', 'msf', 'blRange', 'SF_timecourses_bl', 'tAx', 'subjnum', 'RP_test');
 
 %% Tell me what I have done so far
 disp(['subj ' num2str(subjnum) ' done']);
