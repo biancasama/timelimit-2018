@@ -53,23 +53,29 @@ grp1= [4 8 10 12 14 16];
 grp2= [1 2 3 5 6 7 9 11 13 15 17];
 
 %~~~ Other
+OKsubjs= [3 6 7 8 10 13 15 17 18 19 20 21];
 
 %% Load timelocked averages from each subject's folders
+cd(pwd); nSubjs= length(OKsubjs);
 
 for subi=1:nSubjs;
-   
-    if subi== 1
-%                 fname =
-%                 sprintf('subj%02d_noHPI/Timeseries/Amplitudes/Baseline_Haggard/timeseries_EEG.mat',subi);
-%                 %or avg_EEG.mat
-%         fname = sprintf('subj%02d_noHPI/Timeseries/Amplitudes/No_Baseline/timeseries_EEG.mat',subi);
-    else
-%                 fname = sprintf('subj%02d/Timeseries/Amplitudes/Baseline_Haggard/timeseries_EEG.mat',subi); %'subj%02d/avg_EEG.mat'
-%         fname = sprintf('subj%02d/Timeseries/Amplitudes/No_Baseline/timeseries_EEG.mat',subi); %or avg_EEG.mat
-    end
-    if isfile(fname)
-        pickupSub(subi) = load(fname);
-    end
+    %
+    %     if subi== 1
+    % %                 fname =
+    % %                 sprintf('subj%02d_noHPI/Timeseries/Amplitudes/Baseline_Haggard/timeseries_EEG.mat',subi);
+    % %                 %or avg_EEG.mat
+    % %         fname = sprintf('subj%02d_noHPI/Timeseries/Amplitudes/No_Baseline/timeseries_EEG.mat',subi);
+    %     else
+    % %                 fname = sprintf('subj%02d/Timeseries/Amplitudes/Baseline_Haggard/timeseries_EEG.mat',subi); %'subj%02d/avg_EEG.mat'
+    % %     end
+    %     if isfile(fname)
+    fname_avg= sprintf('subj%02d_RP_avg',OKsubjs(subi));
+    pickupSub(subi) = load(fname_avg);
+%     fname_std= sprintf('subj%02d_RP_std',subi);
+%     pickupStd(subi) = load(fname_std);
+%     
+end
+
 end
 
 %% Load timelocked variabilities from each subject's folders
@@ -99,18 +105,18 @@ end
 
 %% Create a new matrix for subjects (11)or (17) x conditions (5)
 
-avgmatrix=[]; stdmatrix=[];
+avgmatrix=[]; % stdmatrix=[];
 for subi= 1:nSubjs; %nGoodSubjects
     for k= 1:5
         avgmatrix{subi,k}= pickupSub(subi).avg{k}; %pickupSub(i).avg_EEG{k}
 %         avgmatrix{subi,k}= pickupSub(subi).avg{k}; 
-        stdmatrix{subi,k}= pickupStd(subi).across_stdev{k}; 
+%         stdmatrix{subi,k}= pickupStd(subi).across_stdev{k}; 
     end
 end
 
 %% Do grandaverage across conditions
 
-Grand_Avg=[]; Grand_Std=[];
+Grand_Avg=[]; %Grand_Std=[];
 
 for k= 1:5
     
@@ -118,7 +124,7 @@ for k= 1:5
 %     cfg.preproc.lpfilter='yes';
 %     cfg.preproc.lpfreq= 2;
     Grand_Avg{k}= ft_timelockgrandaverage([],avgmatrix{:,k});
-    Grand_Std{k}= ft_timelockgrandaverage([],stdmatrix{:,k});
+%     Grand_Std{k}= ft_timelockgrandaverage([],stdmatrix{:,k});
     
 end
 
@@ -178,7 +184,7 @@ for j= 1:numel(channels)
         
     end
     filename= ['Grandavg_RP_Inf', '_Chan_' int2str(channels(j)) '.png'];
-        saveas(h(j),filename); % you will save 15 figures (5x3)
+%         saveas(h(j),filename); % you will save 15 figures (5x3)
         hold on
         hold off
 end
@@ -188,7 +194,7 @@ end
 conditions_all= [1 2 3 4 5];
 n_conditions= length(conditions_all);
 channels= [20 28 30]; %20= FC1; 28= C3; 30= CZ (EEG cap 60 electrodes)
-
+chan_names= {'FC1','C3', 'Cz'};
 
 for j= 1:numel(channels)
     k(j)=figure;
@@ -198,7 +204,7 @@ for j= 1:numel(channels)
         hold on
         p1=plot(Grand_Avg{condi}.time(:),Grand_Avg{condi}.avg(channels(j),:),'LineWidth',2); %this time use samples on the time axes
         hold on
-        title(['Grandaverage RP amplitude for short vs long conditions, ' ' Channel ' int2str(channels(j)) ]);
+        title(['Grandaverage RP amplitude, N= ' int2str(nSubjs), ', Channel ' chan_names{j} ]);
         xlabel('Time (s)');
         ylabel('Amplitude (\muV)');
         legend('2sec','4sec','8ec','16sec','Inf','Location','SouthEast')% COLORS DO NOT MATCH
@@ -206,7 +212,7 @@ for j= 1:numel(channels)
         filename= ['RP_grandavg_Chan_' int2str(channels(j)) '_allconds', '.png'];
         
     end
-    saveas(k(j),filename); %HOW TO SAVE ONLY LAST FIGURE FROM A LOOP??
+%     saveas(k(j),filename); %HOW TO SAVE ONLY LAST FIGURE FROM A LOOP??
     hold on
     hold off
 end
@@ -224,7 +230,7 @@ if input('Save TIMELOCKED GRANDAVERAGES results? RISK OF OVERWRITING  (1/0) ... 
     % save Grand_Avg Grand_Avg
     
     save avgmatrix avgmatrix; save stdmatrix stdmatrix;
-    save Grand_2Avg Grand_Avg; save Grand_Std Grand_Std;
+    save Grand_Avg Grand_Avg; save Grand_Std Grand_Std;
 
 end
 

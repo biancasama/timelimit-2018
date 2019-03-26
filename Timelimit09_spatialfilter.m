@@ -60,19 +60,19 @@ cfg.trials = good_trls;
 % cfg.demean = 'yes';
 cfg.lpfilter='yes';
 cfg.lpfreq= 30; %notch filter 50
-    DATA_REJ_INTERP= ft_preprocessing(cfg,DATA_REJ_INTERP);
+    DATA_CLEAN= ft_preprocessing(cfg,DATA_REJ_INTERP);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % per condition 
-%     DATA_cond=[];
-%     for condi = 1:length(un_conds)
-% 
-%         cfg=[];
-%         cfg.trials= find(newcond == un_conds(condi));
-%         DATA_cond{condi} = ft_preprocessing(cfg,DATA_REJ_INTERP);
-% 
-%     end
+    DATA_CLcond=[];
+    for condi = 1:length(un_conds)
+
+        cfg=[];
+        cfg.trials= find(newcond == un_conds(condi));
+        DATA_CLcond{condi} = ft_preprocessing(cfg,DATA_REJ_INTERP);
+
+    end
 
 %% Do Spatial Filter here
 
