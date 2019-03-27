@@ -56,7 +56,7 @@ grp2= [1 2 3 5 6 7 9 11 13 15 17];
 OKsubjs= [3 6 7 8 10 13 15 17 18 19 20 21];
 
 %% Load timelocked averages from each subject's folders
-cd(pwd); nSubjs= length(OKsubjs);
+cd(pwd); nSubjs= length(subj_folders);
 
 for subi=1:nSubjs;
     %
@@ -69,8 +69,8 @@ for subi=1:nSubjs;
     % %                 fname = sprintf('subj%02d/Timeseries/Amplitudes/Baseline_Haggard/timeseries_EEG.mat',subi); %'subj%02d/avg_EEG.mat'
     % %     end
     %     if isfile(fname)
-    fname_avg= sprintf('subj%02d_RP_avg',OKsubjs(subi));
-    pickupSub(subi) = load(fname_avg);
+    fname_avg= sprintf('subj%02d_RP_avg',subi);
+    pickupAvg(subi) = load(fname_avg);
 %     fname_std= sprintf('subj%02d_RP_std',subi);
 %     pickupStd(subi) = load(fname_std);
 %     
@@ -108,7 +108,7 @@ end
 avgmatrix=[]; % stdmatrix=[];
 for subi= 1:nSubjs; %nGoodSubjects
     for k= 1:5
-        avgmatrix{subi,k}= pickupSub(subi).avg{k}; %pickupSub(i).avg_EEG{k}
+        avgmatrix{subi,k}= pickupAvg(subi).avg{k}; %pickupSub(i).avg_EEG{k}
 %         avgmatrix{subi,k}= pickupSub(subi).avg{k}; 
 %         stdmatrix{subi,k}= pickupStd(subi).across_stdev{k}; 
     end
@@ -121,10 +121,12 @@ Grand_Avg=[]; %Grand_Std=[];
 for k= 1:5
     
     cfg=[];
-%     cfg.preproc.lpfilter='yes';
-%     cfg.preproc.lpfreq= 2;
-    Grand_Avg{k}= ft_timelockgrandaverage([],avgmatrix{:,k});
-%     Grand_Std{k}= ft_timelockgrandaverage([],stdmatrix{:,k});
+    %     cfg.preproc.lpfilter='yes';
+    %     cfg.preproc.lpfreq= 2;
+    cfg.channel = {'EEG020','EEG021','EEG029','EEG030','EEG031','EEG039','EEG040'};
+    Grand_Avg{k}= ft_timelockgrandaverage([],avgmatrix{OKsubjs,k});
+    Grand_Avg_ROI{k}= mean(Grand_Avg{k}.avg,1);
+    %     Grand_Std{k}= ft_timelockgrandaverage([],stdmatrix{:,k});
     
 end
 
@@ -204,7 +206,7 @@ for j= 1:numel(channels)
         hold on
         p1=plot(Grand_Avg{condi}.time(:),Grand_Avg{condi}.avg(channels(j),:),'LineWidth',2); %this time use samples on the time axes
         hold on
-        title(['Grandaverage RP amplitude, N= ' int2str(nSubjs), ', Channel ' chan_names{j} ]);
+        title(['Grandaverage RP amplitude, N= ' int2str(numel(OKsubjs)), ', Channel ' chan_names{j} ]);
         xlabel('Time (s)');
         ylabel('Amplitude (\muV)');
         legend('2sec','4sec','8ec','16sec','Inf','Location','SouthEast')% COLORS DO NOT MATCH
@@ -217,6 +219,25 @@ for j= 1:numel(channels)
     hold off
 end
 
+channels= [20,21,29,30,31,39,40];
+chan_names= {'FC1','C3', 'Cz'};
+
+figure;
+    for condi= 1: n_conditions;
+        
+        colors = {[0 0 1],[1 0 0],[0 1 0],[0 0 0],[1 1 0]} % Cell array of colors.
+        hold on
+        p1=plot(Grand_Avg{condi}.time(:),Grand_Avg_ROI{condi},'LineWidth',2); %this time use samples on the time axes
+        hold on
+        title(['Grandaverage RP amplitude, N= ' int2str(numel(OKsubjs)), ', ROI channels' ]);
+        xlabel('Time (s)');
+        ylabel('Amplitude (\muV)');
+        legend('2sec','4sec','8ec','16sec','Inf','Location','SouthEast')% COLORS DO NOT MATCH
+        hold on
+        filename= ['RP_grandavg_ROI_chans.png'];
+        
+    end
+    
 %% Save grandaverages timeseries (mean, std)
 
 % Create the folder if it doesn't exist already.

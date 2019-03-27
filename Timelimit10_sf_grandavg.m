@@ -55,27 +55,27 @@ GAVGMX8= mean(MATRIX8(RPsubjs,:));
 GAVGMX16= mean(MATRIX16(RPsubjs,:));
 GAVGMXInf= mean(MATRIXInf(RPsubjs,:));
 
+% 
+% GSEMMX2= sem(MATRIX2(RPsubjs,:),1);
+% GSEMMX4= sem(MATRIX4(RPsubjs,:));
+% GSEMMX8= sem(MATRIX8(RPsubjs,:));
+% GSEMMX16= sem(MATRIX16(RPsubjs,:));
+% GSEMMXInf= sem(MATRIXInf(RPsubjs,:));
 
-GSEMMX2= sem(MATRIX2(RPsubjs,:),1);
-GSEMMX4= sem(MATRIX4(RPsubjs,:));
-GSEMMX8= sem(MATRIX8(RPsubjs,:));
-GSEMMX16= sem(MATRIX16(RPsubjs,:));
-GSEMMXInf= sem(MATRIXInf(RPsubjs,:));
 
-
-mean_X2= mean(GAVGMX2(:));
-mean_X4= mean(GAVGMX4(:));
-mean_X8= mean(GAVGMX8(:));
-mean_X16= mean(GAVGMX16(:));
-mean_XInf= mean(GAVGMXInf(:));
+mean_X2= mean(GAVGMX2(1:1401));
+mean_X4= mean(GAVGMX4(1:1401));
+mean_X8= mean(GAVGMX8(1:1401));
+mean_X16= mean(GAVGMX16(1:1401));
+mean_XInf= mean(GAVGMXInf(1:1401));
 
 mean_SFall= [mean_X2, mean_X4, mean_X8, mean_X16, mean_XInf];
 
-semX2= sem(GAVGMX2(:),1);
-semX4= sem(GAVGMX4(:),1);
-semX8= sem(GAVGMX8(:),1);
-semX16= sem(GAVGMX16(:),1);
-semXInf= sem(GAVGMXInf(:),1);
+semX2= sem(GAVGMX2(1:1401));
+semX4= sem(GAVGMX4(1:1401));
+semX8= sem(GAVGMX8(1:1401));
+semX16= sem(GAVGMX16(1:1401));
+semXInf= sem(GAVGMXInf(1:1401));
 
 sem_SFall= [semX2, semX4, semX8, semX16, semXInf];
 
@@ -111,4 +111,4 @@ errorbar(s,mean_SFall,sem_SFall,'r.','LineWidth',2,'MarkerEdgeColor','k',...
 set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf'}); 
 xlabel('Conditions (sec)');
 ylabel('RP amplitudes (\muV');
-title('Spatial Filter');
+title('Spatial Filter, latency (-1sec -0.200sec)');
