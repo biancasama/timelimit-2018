@@ -97,19 +97,19 @@ for i= 1:nSubjs; %nGoodSubjects or nSubjects
 %         mean_premov_amp.ch28(i, k) = mean(datamatrix_premov.ch28{i,k}.avg);
 % %         sem_premov_amp.ch28(i, k) = sem(mean_premov_amp.ch28(i, k),1);
 % 
-%         cfg = [];
-%         cfg.latency = [-1 -.2];
-%         cfg.channel = 'EEG030';
-%         datamatrix_premov.ch30{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
-%         mean_premov_amp.ch30(i, k) = mean(datamatrix_premov.ch30{i,k}.avg);
+        cfg = [];
+        cfg.latency = [-1 0]; %[-1 -.2]
+        cfg.channel = 'EEG030';
+        datamatrix_premov.ch30{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
+        mean_premov_amp.ch30(i, k) = mean(datamatrix_premov.ch30{i,k}.avg);
 %         sem_premov_amp.ch30(i, k) = sem(mean_premov_amp.ch30(i, k),1);
 
-        cfg = [];
-%         cfg.latency = [-1 -.2];
+%         cfg = [];
+%         cfg.latency = [-1 0];%[-1 -.2]
 %         cfg.channel = {'EEG020','EEG021','EEG029','EEG030','EEG031','EEG039','EEG040'};
 %         datamatrix_premov.ROI{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
 %         datamatrix_premov.ROI{i,k}= mean(datamatrix_premov.ROI{i,k}.avg,1);
-        mean_premov_amp.ROI(i, k) = mean(datamatrix_premov.ROI{i,k});
+%         mean_premov_amp.ROI(i, k) = mean(datamatrix_premov.ROI{i,k});
         
     end
 end
