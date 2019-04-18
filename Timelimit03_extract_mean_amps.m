@@ -62,6 +62,14 @@ for i=1:nSubjs;
     end
 end
 
+
+% for i=1:21
+%     
+%     fname= sprintf('subj%02d_RP_avg.mat',i)
+%     pickupAvg(i)= load(fname);
+%     
+% end
+
 %% Create a new matrix for subjects (11) x conditions (5) and extraxt amp
 % FIX ME IN A SMART WAY
 %=========================================================================%
@@ -81,8 +89,8 @@ for i= 1:nSubjs; %nGoodSubjects or nSubjects
     
     for k= 1:5
         
-% %         avg2matrix{i,k}= pickupSub(i).avg{k}; %avg_EEG
-% %         stdmatrix{i,k}= pickupStd(i).across_stdev{k}.avg
+%         avg2matrix{i,k}= pickupSub(i).avg{k}; %avg_EEG
+%         stdmatrix{i,k}= pickupStd(i).across_stdev{k}.avg
 %         cfg = [];
 %         cfg.latency = [-1 -.2];
 %         cfg.channel = 'EEG020';
@@ -97,20 +105,20 @@ for i= 1:nSubjs; %nGoodSubjects or nSubjects
 %         mean_premov_amp.ch28(i, k) = mean(datamatrix_premov.ch28{i,k}.avg);
 % %         sem_premov_amp.ch28(i, k) = sem(mean_premov_amp.ch28(i, k),1);
 % 
-        cfg = [];
-        cfg.latency = [-1 0]; %[-1 -.2]
-        cfg.channel = 'EEG030';
-        datamatrix_premov.ch30{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
-        mean_premov_amp.ch30(i, k) = mean(datamatrix_premov.ch30{i,k}.avg);
+%         cfg = [];
+%         cfg.latency = [-1 -0]; %[-1 -.2]
+%         cfg.channel = 'EEG030';
+%         datamatrix_premov.ch30{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
+%         mean_premov_amp.ch30(i, k) = mean(datamatrix_premov.ch30{i,k}.avg);
 %         sem_premov_amp.ch30(i, k) = sem(mean_premov_amp.ch30(i, k),1);
 
 %         cfg = [];
-%         cfg.latency = [-1 0];%[-1 -.2]
+%         cfg.latency = [-1 -0];%[-1 -.2]
 %         cfg.channel = {'EEG020','EEG021','EEG029','EEG030','EEG031','EEG039','EEG040'};
 %         datamatrix_premov.ROI{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
 %         datamatrix_premov.ROI{i,k}= mean(datamatrix_premov.ROI{i,k}.avg,1);
-%         mean_premov_amp.ROI(i, k) = mean(datamatrix_premov.ROI{i,k});
-        
+        mean_premov_amp.ROI(i, k) = mean(datamatrix_premov.ROI{i,k});
+% %         
     end
 end
 

@@ -4,19 +4,19 @@ t0 = 3;
 tAx = [0:2000]./SR - 3;
 
 d = dir('subj*');
-for i=1:22
-%     fname = sprintf('%s/Timeseries/SpatialFilter/SF_results.mat',d(i).name);
-fname= sprintf('subj%02d_SF_results_newBl', i)
+for i=1:21
+    fname = sprintf('%s/Timeseries/SpatialFilter/SF_results.mat',d(i).name);
+% fname= sprintf('subj%02d_SF_results_newBl', i)
     S{i} = load(fname);
 end
 
-for i=1:22
+for i=1:21
     
     Ind2= mean(full(S{i}.trl(S{i}.Ind2,:)));
     Ind4 = mean(full(S{i}.trl(S{i}.Ind4,:)));
     Ind8= mean(full(S{i}.trl(S{i}.Ind8,:)));
     Ind16 = mean(full(S{i}.trl(S{i}.Ind16,:)));
-    IndInf = mean(full(S{i}.trl(S{i}.IndInf,:)));
+    IndInf = mean(full(S{i}.trl(S{i}.Ind32,:)));
     
 %     Ind2= mean(full(S{i}.SF_timecourses_bl(S{i}.Ind2,:)));
 %     Ind4 = mean(full(S{i}.SF_timecourses_bl(S{i}.Ind4,:)));
@@ -29,7 +29,7 @@ for i=1:22
 %     Ind8_bl = baseline_correct(Ind8',SR,t0,S{i}.blRange);
 %     Ind16_bl = baseline_correct(Ind16',SR,t0,S{i}.blRange);
 %     IndInf_bl = baseline_correct(IndInf',SR,t0,S{i}.blRange);
-    
+%     
     saveTo = sprintf('SF_cond_subj%02d.mat',i);
     save(saveTo,'Ind*');
 end

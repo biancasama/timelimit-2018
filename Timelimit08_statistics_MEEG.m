@@ -525,7 +525,20 @@ clearvars;load('mean_premov_amp_ch30.mat');
 
 clearvars;load('median_premov_amp_ch30.mat');
 [p,tbl,stats] = friedman(median_premov_amp_ch30);
-c,m,h,nms] = multcompare(stats);
+[c,m,h,nms] = multcompare(stats);
+
+%% Kruskalwallis + Multiple Comparison test (added April 10th 2019)
+
+GROUP= {'2 sec','4 sec', '8 sec','16 sec','Inf'};
+
+% Channel Cz
+[P,ANOVATAB,STATS] = kruskalwallis(mean_premov_amp.ch30,GROUP);
+[c,m,h,nms] = multcompare(STATS);
+
+% ROI selection of channels
+% ('EEG020','EEG021','EEG029','EEG030','EEG031','EEG039','EEG040')
+[P,ANOVATAB,STATS] = kruskalwallis(mean_premov_amp.ROI,GROUP);
+[c,m,h,nms] = multcompare(STATS);
 
 %% END
 %%%%%%%%%%%%%%%%%%%
