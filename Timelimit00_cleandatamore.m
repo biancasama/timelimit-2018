@@ -125,7 +125,7 @@ if input('Save BEHAVIORAL INDEXES results? RISK OF OVERWRITING  (1/0) ... ')
          if ~exist(fullfile(behav_folder)); mkdir(fullfile(behav_folder)); end;
     cd(behav_folder);
 
-    save GOOD_BEHAV newgood_resps outliers good_resps_cond  goodrespsall idx_goodtrls idx_allbadtrls whichEarly whichLate conds
+    save GOOD_BEHAV newgood_resps outliers good_resps_cond  goodrespsall idx_goodtrls idx_allbadtrls whichEarly whichLate conds idx_goodxcond
 end
 
 %%

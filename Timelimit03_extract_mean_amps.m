@@ -62,6 +62,14 @@ for i=1:nSubjs;
     end
 end
 
+
+% for i=1:21
+%     
+%     fname= sprintf('subj%02d_RP_avg.mat',i)
+%     pickupAvg(i)= load(fname);
+%     
+% end
+
 %% Create a new matrix for subjects (11) x conditions (5) and extraxt amp
 % FIX ME IN A SMART WAY
 %=========================================================================%
@@ -73,9 +81,9 @@ end
 % % fix this
 % good_subjects = [2 3 5 6 7 8 10 11 12 13 15 16 17]; % removed: subj04,subj09,subj14.
 % nGoodSubjects = length(good_subjects);
-datamatrix_premov= struct('ch20',[],'ch28', [],'ch30',[]); 
-mean_premov_amp= struct('ch20',[],'ch28', [],'ch30',[]); 
-sem_premov_amp= struct('ch20',[],'ch28', [],'ch30',[]);
+datamatrix_premov= struct('ch20',[],'ch28', [],'ch30',[],'ROI', []); 
+mean_premov_amp= struct('ch20',[],'ch28', [],'ch30',[],'ROI', []); 
+% sem_premov_amp= struct('ch20',[],'ch28', [],'ch30',[]);
 
 for i= 1:nSubjs; %nGoodSubjects or nSubjects
     
@@ -83,28 +91,34 @@ for i= 1:nSubjs; %nGoodSubjects or nSubjects
         
 %         avg2matrix{i,k}= pickupSub(i).avg{k}; %avg_EEG
 %         stdmatrix{i,k}= pickupStd(i).across_stdev{k}.avg
-        cfg = [];
-        cfg.latency = [-1 -.2];
-        cfg.channel = 'EEG020';
-        datamatrix_premov.ch20{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
-        mean_premov_amp.ch20(i, k) = mean(datamatrix_premov.ch20{i,k}.avg);
-%         sem_premov_amp.ch20(i, k) = sem(mean_premov_amp.ch20(i, k),1);
-        
-        cfg = [];
-        cfg.latency = [-1 -.2];
-        cfg.channel = 'EEG028';
-        datamatrix_premov.ch28{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
-        mean_premov_amp.ch28(i, k) = mean(datamatrix_premov.ch28{i,k}.avg);
-%         sem_premov_amp.ch28(i, k) = sem(mean_premov_amp.ch28(i, k),1);
-
-        cfg = [];
-        cfg.latency = [-1 -.2];
-        cfg.channel = 'EEG030';
-        datamatrix_premov.ch30{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
-        mean_premov_amp.ch30(i, k) = mean(datamatrix_premov.ch30{i,k}.avg);
+%         cfg = [];
+%         cfg.latency = [-1 -.2];
+%         cfg.channel = 'EEG020';
+%         datamatrix_premov.ch20{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
+%         mean_premov_amp.ch20(i, k) = mean(datamatrix_premov.ch20{i,k}.avg);
+% %         sem_premov_amp.ch20(i, k) = sem(mean_premov_amp.ch20(i, k),1);
+%         
+%         cfg = [];
+%         cfg.latency = [-1 -.2];
+%         cfg.channel = 'EEG028';
+%         datamatrix_premov.ch28{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
+%         mean_premov_amp.ch28(i, k) = mean(datamatrix_premov.ch28{i,k}.avg);
+% %         sem_premov_amp.ch28(i, k) = sem(mean_premov_amp.ch28(i, k),1);
+% 
+%         cfg = [];
+%         cfg.latency = [-1 -0]; %[-1 -.2]
+%         cfg.channel = 'EEG030';
+%         datamatrix_premov.ch30{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
+%         mean_premov_amp.ch30(i, k) = mean(datamatrix_premov.ch30{i,k}.avg);
 %         sem_premov_amp.ch30(i, k) = sem(mean_premov_amp.ch30(i, k),1);
 
-        
+%         cfg = [];
+%         cfg.latency = [-1 -0];%[-1 -.2]
+%         cfg.channel = {'EEG020','EEG021','EEG029','EEG030','EEG031','EEG039','EEG040'};
+%         datamatrix_premov.ROI{i,k} = ft_selectdata(cfg, avgmatrix{i,k});
+%         datamatrix_premov.ROI{i,k}= mean(datamatrix_premov.ROI{i,k}.avg,1);
+        mean_premov_amp.ROI(i, k) = mean(datamatrix_premov.ROI{i,k});
+% %         
     end
 end
 
@@ -134,8 +148,8 @@ cd(figfolder);
 a=2; r=2;n=5;
 s = a*r.^(0:n-1); 
 
-mean_all= struct('ch20',[],'ch28', [],'ch30',[]);
-sem_all= struct('ch20',[],'ch28', [],'ch30',[]);
+mean_all= struct('ch20',[],'ch28', [],'ch30',[],'ROI', []);
+sem_all= struct('ch20',[],'ch28', [],'ch30',[]),'ROI', [];
 
 % for k=1:5
     
@@ -146,9 +160,11 @@ sem_all= struct('ch20',[],'ch28', [],'ch30',[]);
     sem_all.ch28= sem(mean_premov_amp.ch28(:,:),1);
     
     
-    mean_all.ch30= mean(mean_premov_amp.ch30(:,:));
-    sem_all.ch30= sem(mean_premov_amp.ch30(:,:),1);
+    mean_all.ch30= mean(mean_premov_amp.ch30(OKsubjs,:));
+    sem_all.ch30= sem(mean_premov_amp.ch30(OKsubjs,:),1);
     
+    mean_all.ROI= mean(mean_premov_amp.ROI(OKsubjs,:));
+    sem_all.ROI= sem(mean_premov_amp.ROI(OKsubjs,:),1);
     
 % end
 
@@ -207,6 +223,15 @@ set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf'})
 xlabel('Conditions (sec)')
 ylabel('RP amplitudes (\muV')
 title('Channel Cz')
+
+bar(s,mean_all.ROI)
+hold on
+errorbar(s,mean_all.ROI,sem_all.ROI,'r.','LineWidth',2,'MarkerEdgeColor','k',...
+    'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Mean')
+set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf'}) 
+xlabel('Conditions (sec)')
+ylabel('RP amplitudes (\muV')
+title('ROI: channels 20,21,29,30,31,39,40')
 
 %% prepare matrix for stats
 % let's remove the 3rd condition but handle with care (if you run it twice

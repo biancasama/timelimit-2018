@@ -70,8 +70,8 @@ clearvars;load('mean_premov_amp_ch20');
 [p10,h10,stats] =signrank(mean_premov_amp.ch20(:,4),mean_premov_amp.ch20(:,5),'tail','left') % vs Inf
 
 % FDR
-pvals_ch20_05= [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10];
-[h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(pvals_ch20_05,0.05,'pdep','yes');
+pvals_SF_05= [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10];
+[h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(pvals_SF_05,0.05,'pdep','yes');
 
 %=================================================================================================
 % channel 28
@@ -129,6 +129,63 @@ clearvars;load('mean_premov_amp_ch30');
 pvals_ch30_05= [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10];
 [h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(pvals_ch30_05,0.05,'pdep','yes');
 
+
+%=================================================================================================
+% ROi
+clearvars;load('mean_premov_amp_ch30');
+
+% Alpha= 0.05,  tail 'left'
+
+% Condition n.1 (2sec) vs all the others
+[p1,h1,stats] =signrank(mean_premov_amp.ROI(:,1),mean_premov_amp.ROI(:,5),'tail','left') % vs Inf
+[p2,h2,stats] =signrank(mean_premov_amp.ROI(:,1),mean_premov_amp.ROI(:,4),'tail','left') % vs 16sec
+[p3,h3,stats] =signrank(mean_premov_amp.ROI(:,1),mean_premov_amp.ROI(:,3),'tail','left') % vs 8sec
+[p4,h4,stats] =signrank(mean_premov_amp.ROI(:,1),mean_premov_amp.ROI(:,2),'tail','left') % vs 4sec
+
+% Condition n.2 (4sec) vs all the others
+[p5,h5,stats] =signrank(mean_premov_amp.ROI(:,2),mean_premov_amp.ROI(:,5),'tail','left') % vs Inf
+[p6,h6,stats] =signrank(mean_premov_amp.ROI(:,2),mean_premov_amp.ROI(:,4),'tail','left') % vs 16sec
+[p7,h7,stats] =signrank(mean_premov_amp.ROI(:,2),mean_premov_amp.ROI(:,3),'tail','left') % vs 8sec
+
+% Condition n.3 (8sec) vs all the others
+[p8,h8,stats8] =signrank(mean_premov_amp.ROI(:,3),mean_premov_amp.ROI(:,5),'tail','left') % vs Inf
+[p9,h9,stats] =signrank(mean_premov_amp.ROI(:,3),mean_premov_amp.ROI(:,4),'tail','left') % vs 16sec
+
+% Condition n.4 (16sec) vs 5
+[p10,h10,stats] =signrank(mean_premov_amp.ROI(:,4),mean_premov_amp.ROI(:,5),'tail','left') % vs Inf
+
+% FDR
+pvals_ROI_05= [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10];
+[h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(pvals_ROI_05,0.05,'pdep','yes');
+
+%=================================================================================================
+
+% Spatial Filter
+clearvars;load('GAVGMX*');
+
+ALPHA= 0.05;
+% Condition n.1 (2sec) vs all the others
+[p1,h1,stats] =signrank(mean(MATRIX2(RPsubjs,1000:1501),2),mean(MATRIXInf(RPsubjs,1000:1501),2),'tail','left','alpha',ALPHA) % vs Inf
+[p2,h2,stats] =signrank(mean(MATRIX2(RPsubjs,1000:1501),2),mean(MATRIX16(RPsubjs,1000:1501),2),'tail','left','alpha',ALPHA) % vs 16sec
+[p3,h3,stats] =signrank(mean(MATRIX2(RPsubjs,1000:1501),2),mean(MATRIX8(RPsubjs,1000:1501),2),'tail','left','alpha',ALPHA) % vs 8sec
+[p4,h4,stats] =signrank(mean(MATRIX2(RPsubjs,1000:1501),2),mean(MATRIX4(RPsubjs,1000:1501),2),'tail','left','alpha',ALPHA) % vs 4sec
+
+% Condition n.2 (4sec) vs all the others
+[p5,h5,stats] =signrank(mean(MATRIX4(RPsubjs,1000:1501),2),mean(MATRIXInf(RPsubjs,1000:1501),2),'tail','left','alpha',ALPHA) % vs Inf
+[p6,h6,stats] =signrank(mean(MATRIX4(RPsubjs,1000:1501),2),mean(MATRIX16(RPsubjs,1000:1501),2),'tail','left','alpha',ALPHA) % vs 16sec
+[p7,h7,stats] =signrank(mean(MATRIX4(RPsubjs,1000:1501),2),mean(MATRIX8(RPsubjs,1000:1501),2),'tail','left','alpha',ALPHA) % vs 8sec
+
+% Condition n.3 (8sec) vs all the others
+[p8,h8,stats8] =signrank(mean(MATRIX8(RPsubjs,1000:1501),2),mean(MATRIXInf(RPsubjs,1000:1501),2),'tail','left','alpha',ALPHA) % vs Inf
+[p9,h9,stats] =signrank(mean(MATRIX8(RPsubjs,1000:1501),2),mean(MATRIX16(RPsubjs,1000:1501),2),'tail','left','alpha',ALPHA) % vs 16sec
+
+% Condition n.4 (16sec) vs 5
+[p10,h10,stats] =signrank(mean(MATRIX16(RPsubjs,1000:1501),2),mean(MATRIXInf(RPsubjs,1000:1501),2),'tail','left','alpha',ALPHA) % vs Inf
+
+% FDR
+pvals_SF_05= [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10]; alpha= 0.05;
+[h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(pvals_SF_05,alpha,'pdep','yes');
+
 %% SLOPE RP
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -156,8 +213,8 @@ clearvars;load('Slope_all');
 [p10,h10,stats] =signrank(Slope_all.ch20{4}(:),Slope_all.ch20{5}(:),'tail','left') % vs Inf
 
 % FDR
-pvals_ch20_05= [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10];
-[h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(pvals_ch20_05,0.05,'pdep','yes');
+pvals_SF_05= [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10];
+[h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(pvals_SF_05,0.05,'pdep','yes');
 
 %=================================================================================================
 clearvars;load('Slope_all');
@@ -183,8 +240,8 @@ clearvars;load('Slope_all');
 [p10,h10,stats] =signrank(Slope_all.ch20{4}(:),Slope_all.ch20{5}(:),'tail','right') % vs Inf
 
 % FDR
-pvals_ch20_05= [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10];
-[h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(pvals_ch20_05,0.05,'pdep','yes');
+pvals_SF_05= [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10];
+[h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(pvals_SF_05,0.05,'pdep','yes');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % channel 28
@@ -296,7 +353,7 @@ clearvars;load('Slope_all');
 
 % FDR
 pvals_ch30_05= [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10];
-[h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(pvals_ch30_05,0.05,'pdep','yes');
+[h, ~, adj_ci_cvrg, adj_p]=fdr_bh(pvals_ch30_05,0.05,'pdep','yes');
 
 %% INTERCEPT RP (added 21/09)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -324,8 +381,8 @@ clearvars;load('Intercept_all');
 [p10,h10,stats] =signrank(Intercept_all.ch20{4}(:),Intercept_all.ch20{5}(:),'tail','left') % vs Inf
 
 % FDR
-pvals_ch20_05= [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10];
-[h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(pvals_ch20_05,0.05,'pdep','yes');
+pvals_SF_05= [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10];
+[h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(pvals_SF_05,0.05,'pdep','yes');
 
 %===================================================================================================
 % channel 28 - added 25.09.18
@@ -415,6 +472,16 @@ clearvars;load('median_premov_amp_ch30.mat');
 [p,tbl,stats]= kruskalwallis(median_premov_amp_ch30);
 [c,m,h,nms] = multcompare(stats);
 
+%=====================================================================================================
+% channel 30
+clearvars;load('mean_premov_amp_ch30.mat');
+[p,tbl,stats] = kruskalwallis(GAVGMXall);
+[c,m,h,nms] = multcompare(stats);
+
+clearvars;load('median_premov_amp_ch30.mat');
+[p,tbl,stats]= kruskalwallis(median_premov_amp_ch30);
+[c,m,h,nms] = multcompare(stats);
+
 
 % FDR
 pvals_chans_mean= [p11,p13,p15];
@@ -458,7 +525,20 @@ clearvars;load('mean_premov_amp_ch30.mat');
 
 clearvars;load('median_premov_amp_ch30.mat');
 [p,tbl,stats] = friedman(median_premov_amp_ch30);
-c,m,h,nms] = multcompare(stats);
+[c,m,h,nms] = multcompare(stats);
+
+%% Kruskalwallis + Multiple Comparison test (added April 10th 2019)
+
+GROUP= {'2 sec','4 sec', '8 sec','16 sec','Inf'};
+
+% Channel Cz
+[P,ANOVATAB,STATS] = kruskalwallis(mean_premov_amp.ch30,GROUP);
+[c,m,h,nms] = multcompare(STATS);
+
+% ROI selection of channels
+% ('EEG020','EEG021','EEG029','EEG030','EEG031','EEG039','EEG040')
+[P,ANOVATAB,STATS] = kruskalwallis(mean_premov_amp.ROI,GROUP);
+[c,m,h,nms] = multcompare(STATS);
 
 %% END
 %%%%%%%%%%%%%%%%%%%
