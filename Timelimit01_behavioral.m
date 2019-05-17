@@ -1,35 +1,19 @@
-%%
+%% Behavioral analysis based on MEEG data
+%=========================================================================%
+% AUTHOR: Bianca Trovo (bianca.trovo@alumni.unitn.it)
+% DATE: created on April/May 2019
+% EXPERIMENT: Timelimit_2018
 
-% 
-% % for subi= 1:nSubj
-% RESPS= []; resps= [];
-%     for i= 1:10
-%         
-%         resps= [TRIALS_CELL{i}.rt]';
-%         clockstarts= [TRIALS_CELL{i}.t0]';
-%         CLOCKST= [CLOCKST
-%             clockstarts];
-%         RESPS= [RESPS
-%             resps];
-%         
-%     end
-%     save it in each subj folder
-%     end
-%  
-%   
-%     TIMEDIFF= RESPS - CLOCKST;
-%     waitingtimes= timediff/500; %divided by sampling rate (500Hz)
-%     resptimes= waitingtimes-3.0; % from Zafer's code, we know for sure it's 3 sec exaclty.
-% 
-%     % Main variable that we want
-%     idx_allbadtrls=find(resptimes <= 0|resptimes >= conds); %<=0.2 replaced with 0
-% 
-%     % Extra variables 
-%     idx_tooEarly=find(resptimes <= 0); %<=0.2 replaced with 0
-%     idx_tooLate= find(resptimes >= conds);
-%     idx_goodtrls= find(resptimes > 0 & resptimes < conds);
-%     goodrespsall= resptimes(idx_goodtrls); % in seconds
-%     whichEarly= resptimes(idx_tooEarly);   
+%{
+
+    SCOPE: compute the 
+
+    OUTPUT: 
+
+    FIXME: SEM for medians
+
+%}
+%=========================================================================%
 
 %% START of the script 
 
@@ -47,6 +31,24 @@ BT_setpath
 BT_getsubj
 
 clear LevelAnalysis name numlines prompt subj_folders 
+
+%% More specific paths (maybe set this in the start script)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+behavioral_folder= [results_Path, '/Behaviour']; % it can be also current_subj_folder
+if ~exist(fullfile(behavioral_folder)); mkdir(fullfile(behavioral_folder)); end;
+
+timeseries_folder= [results_Path, '/Timeseries']; % it can be also current_subj_folder
+if ~exist(fullfile(timeseries_folder)); mkdir(fullfile(timeseries_folder)); end;
+cd(timeseries_folder);
+
+powerspectra_folder= [results_Path, '/Powerspect']; % it can be also current_subj_folder
+    if ~exist(fullfile(powerspectra_folder)); mkdir(fullfile(powerspectra_folder)); end;
+    cd(powerspectra_folder);
+    
+regression_folder= [results_Path, '/Regressions']; % it can be also current_subj_folder
+    if ~exist(fullfile(regression_folder)); mkdir(fullfile(regression_folder)); end;
+    
 
 %% Load preprocessed files or 
 
@@ -117,8 +119,9 @@ for subjnum=1:nSubjs; %nSubjs
     disp(['End of subj ' num2str(subjnum)]);
     
 end
+%% Load/group behavioral data, compute log and normalize resp times
 
-
+% load in an unique structure 
 for subi=1:nSubjs
     %
     %         cd(behavioral_folder2);
@@ -126,7 +129,8 @@ for subi=1:nSubjs
     pickupBehav(subi) = load(fname_BehavData);
     
 end
-    
+   
+% log tranformation
 for subi=1:nSubjs;
     pickupBehav(subi).LogRESPS = log(pickupBehav(subi).RESPTIMES);
     
@@ -135,8 +139,27 @@ for subi=1:nSubjs;
     end
     
 end
+
+% normalization with method 'z-score'
+for subi=1:nSubjs;
     
-% log tranformation
+    pickupBehav(subi).normRESPS = normalize(pickupBehav(subi).RESPTIMES);
+    
+    for condi= 1:5
+        pickupBehav(subi).normRESPCond{condi} = normalize(pickupBehav(subi).good_resps_cond{condi});
+    end
+    
+end
+
+save pickupBehav pickupBehav;
+
+% just to see
+ALL_BEHAV= [pickupBehav(subi).RESPTIMES'  pickupBehav(subi).LogRESPS'];
+
+%[pickupBehav(subi).good_resps_cond{1}' pickupBehav(subi).good_resps_cond{2}' pickupBehav(subi).good_resps_cond{3}' pickupBehav(subi).good_resps_cond{4}' pickupBehav(subi).good_resps_cond{5}']
+
+%% descriptive stats
+
  for subi=1:nSubjs;
 
 %         cd(powerspectra_folder);
@@ -146,9 +169,7 @@ end
 
  end
 
-save pickupBehav pickupBehav;
 
-% descriptive stats
 behavStats= struct('mWT',[],'mdWT', [],'stdWT',[], 'semWT',[], 'minWT',[], 'maxWT',[]); 
 for subi= 1: nSubjs
     for condi= 1:5
@@ -163,7 +184,7 @@ for subi= 1: nSubjs
     end
 end
 
-%% descriptive stats
+% in log scale
 LogBehavStats= struct('mWT',[],'mdWT', [],'stdWT',[], 'semWT',[], 'minWT',[], 'maxWT',[]); 
 for subi= 1: nSubjs
     for condi= 1:5
@@ -178,20 +199,35 @@ for subi= 1: nSubjs
     end
 end
 
-GbehavStats= [];
+% normalized (sanity check because mean=0 and std=1)
+normStats= struct('mWT',[],'mdWT', [],'stdWT',[], 'semWT',[], 'minWT',[], 'maxWT',[]); 
+for subi= 1: nSubjs
+    for condi= 1:5
+        
+    normStats.mWT(subi,condi)= nanmean(pickupBehav(subi).normRESPCond{condi});
+    normStats.mdWT(subi,condi)= nanmedian(pickupBehav(subi).normRESPCond{condi});
+    normStats.stdWT(subi,condi)= nanstd(pickupBehav(subi).normRESPCond{condi});
+    normStats.semWT(subi,condi)= sem(pickupBehav(subi).normRESPCond{condi});
+    normStats.minWT(subi,condi)= nanmin(pickupBehav(subi).normRESPCond{condi});
+    normStats.maxWT(subi,condi)= nanmax(pickupBehav(subi).normRESPCond{condi});
+   
+    end
+end
+
+% Grandaverages
+GAVGbehav= [];
 for condi= 1:5
     
-    GbehavStats.mWT(condi)= nanmean(behavStats.mWT(:,condi),1);
-    GbehavStats.mdWT(condi)= nanmean(behavStats.mdWT(:,condi),1);
-    GbehavStats.stdWT(condi)= nanmean(behavStats.stdWT(:,condi),1);
-    GbehavStats.semWT(condi)= nanmean(behavStats.semWT(:,condi),1);
+    GAVGbehav.mWT(condi)= nanmean(behavStats.mWT(:,condi),1);
+    GAVGbehav.mdWT(condi)= nanmean(behavStats.mdWT(:,condi),1);
+    GAVGbehav.stdWT(condi)= nanmean(behavStats.stdWT(:,condi),1);
+    GAVGbehav.semWT(condi)= nanmean(behavStats.semWT(:,condi),1);
     
-    GbehavStats.minWT(condi)= nanmean(behavStats.minWT(:,condi),1);
-    GbehavStats.maxWT(condi)= nanmean(behavStats.maxWT(:,condi),1);
+    GAVGbehav.minWT(condi)= nanmean(behavStats.minWT(:,condi),1);
+    GAVGbehav.maxWT(condi)= nanmean(behavStats.maxWT(:,condi),1);
     
 end
 
-%%
 GAVGLogbehav= [];
 for condi= 1:5
     
@@ -205,58 +241,98 @@ for condi= 1:5
     
 end
 
-% plot
+save DescriptiveStats behavStats  LogBehavStats GAVGbehav GAVGLogbehav;
+
+%% Plots
+% Histograms for the response times distribution across participants 
+
+% Plots as a function of condition
+% linear (?)
 a=2; r=2;n=5;
 s = a*r.^(0:n-1); %Function rule for Recursive sequence (24 Oct)
 
-% figure;
-% for subi= 1: nSubjs
-%     plot(pickupCond(subi).newcond,pickupBehav(subi).RESPTIMES);
-%     hold on;
-% end
-% set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf'}) ;
-% xlabel('Conditions (sec)');
-% ylabel('Waiting Times (sec)');
-% title('Mean & Median WT for ALL subjs');
-% legend('show','Location','bestoutside');
-% xlim([0 Inf]); % added 24 Oct
-z= [2 4 8 16 32];
-figure;
-for subi= 1: nSubjs
+% log
+z= 1:5;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+RPsubjs= [3  6  7  8  10  13  15  17  18  19   20   21];
+
+hfigure=figure;
+for subi= 1: length(RPsubjs)
     
-    plot(z,behavStats.mdWT(subi,:),'o');
+    plot(s,behavStats.mdWT(subi,:),':o','Linewidth',2,...
+    'MarkerSize',5);
     hold on;
     
 end
 
+% legend(h1,{'subj 01','subj 02', 'subj 03','subj 04','subj 05','subj 06','subj 07','subj 08','subj 09','subj 10','subj 11','subj 12','subj 13','subj 14','subj 15','subj 16','subj 17','subj 18','subj 19','subj 20','subj 21','subj 22'},'Location','northwest');
+
+hold on;
+% function H=shadedErrorBar_seb(x,y,errBar,lineProps,transparent)
+% example: shadedErrorBar([],y,{@median,@std},{'r-o','markerfacecolor','r'}); 
+h2=shadedErrorBar_seb(s,behavStats.mWT(RPsubjs,:),{@mean,@sem},{'-or','LineWidth',3,'MarkerEdgeColor','r',...
+    'MarkerFaceColor','red','MarkerSize',5,'DisplayName','Mean'},1);
+
+hold on;
+h3=shadedErrorBar_seb(s,behavStats.mdWT(RPsubjs,:),{@median,@sem},{'-ob','LineWidth',3,'MarkerEdgeColor','b',...
+    'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Median'},1);
+
+        % errorbar(s,GAVGbehav.mWT,GAVGbehav.semWT,'-or','LineWidth',2,'MarkerEdgeColor','k',...
+        %     'MarkerFaceColor','red','MarkerSize',5,'DisplayName','Mean');  % RED= mean
+        % hold on
+        % errorbar(s,GAVGbehav.mdWT,GAVGbehav.semWT,'-sqb','LineWidth',2,'MarkerEdgeColor','k',...
+        %     'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Median'); % BLUE= median 
+
+% legend('SEM','mean','SEM','median','Location','northwest');
+% legend({'subj 01','subj 02', 'subj 03','subj 04','subj 05','subj 06','subj 07','subj 08','subj 09','subj 10','subj 11','subj 12','subj 13','subj 14','subj 15','subj 16','subj 17','subj 18','subj 19','subj 20','subj 21','subj 22','SEM','mean','SEM', 'median'},'Location','northwest');
+legend({'subj 03','subj 06','subj 07','subj 08','subj 10','subj 13','subj 15','subj 17','subj 18','subj 19','subj 20','subj 21','SEM','mean','SEM', 'median'},'Location','northwest');
+
 set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf (32s)'}) ;
 xlabel('Conditions (sec)');
-ylabel('Waiting Times (sec)');
-legend({'subj 01','subj 02', 'subj 03','subj 04','subj 05','subj 06','subj 07','subj 08','subj 09','subj 10','subj 11','subj 12','subj 13','subj 14','subj 15','subj 16','subj 17','subj 18','subj 19','subj 20','subj 21','subj 22','mean','median'},'Location','northwest');
-xlim([0 34]); % added 24 Oct
-title('Mean & Median Waiting Times (N=22)'); 
+ylabel('Average Waiting Times (sec)');
+% xlim([0 34]); % added 24 Oct
+title(['Mean & Median Waiting Times (N=' num2str(length(RPsubjs)) ')']); 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 figure;
-for subi= 1: nSubjs
+for subi= 1: length(RPsubjs)
     
-    plot(z,LogBehavStats.mdWT(subi,:),'o');
+    
+    plot(s,LogBehavStats.mdWT(subi,:),':o');
     hold on;
     
 end
 hold on;
-% plot(s,GbehavStats.mWT,':or','LineWidth',2);
-errorbar(s,GAVGLogbehav.mWT,GAVGLogbehav.semWT,'-or','LineWidth',2,'MarkerEdgeColor','k',...
-    'MarkerFaceColor','red','MarkerSize',5,'DisplayName','Mean')  % RED= mean
-hold on
-errorbar(s,GAVGLogbehav.mdWT,GAVGLogbehav.semWT,'-sqb','LineWidth',2,'MarkerEdgeColor','k',...
-    'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Median') % BLUE= median 
+%  legend(h1,{'subj 01','subj 02', 'subj 03','subj 04','subj 05','subj 06','subj 07','subj 08','subj 09','subj 10','subj 11','subj 12','subj 13','subj 14','subj 15','subj 16','subj 17','subj 18','subj 19','subj 20','subj 21','subj 22'},'Location','northwest');
+
+hold on;
+% function H=shadedErrorBar_seb(x,y,errBar,lineProps,transparent)
+% example: shadedErrorBar([],y,{@median,@std},{'r-o','markerfacecolor','r'}); 
+h2=shadedErrorBar_seb(s,LogBehavStats.mWT(RPsubjs,:),{@mean,@sem},{'-or','LineWidth',3,'MarkerEdgeColor','r',...
+    'MarkerFaceColor','red','MarkerSize',5,'DisplayName','Mean'},1);
+
+hold on;
+h3=shadedErrorBar_seb(s,LogBehavStats.mdWT(RPsubjs,:),{@median,@sem},{'-ob','LineWidth',3,'MarkerEdgeColor','b',...
+    'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Median'},1);
+
+        % errorbar(s,GAVGbehav.mWT,GAVGbehav.semWT,'-or','LineWidth',2,'MarkerEdgeColor','k',...
+        %     'MarkerFaceColor','red','MarkerSize',5,'DisplayName','Mean');  % RED= mean
+        % hold on
+        % errorbar(s,GAVGbehav.mdWT,GAVGbehav.semWT,'-sqb','LineWidth',2,'MarkerEdgeColor','k',...
+        %     'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Median'); % BLUE= median 
+
+% legend('SEM','mean','SEM','median','Location','northwest');
+% legend({'subj 01','subj 02', 'subj 03','subj 04','subj 05','subj 06','subj 07','subj 08','subj 09','subj 10','subj 11','subj 12','subj 13','subj 14','subj 15','subj 16','subj 17','subj 18','subj 19','subj 20','subj 21','subj 22','SEM','mean','SEM', 'median'},'Location','northwest');
+legend({'subj 03','subj 06','subj 07','subj 08','subj 10','subj 13','subj 15','subj 17','subj 18','subj 19','subj 20','subj 21','SEM','mean','SEM', 'median'},'Location','northwest');
 
 set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf (32s)'}) ;
 xlabel('Conditions (sec)');
-ylabel('Waiting Times (sec)');
-legend({'subj 01','subj 02', 'subj 03','subj 04','subj 05','subj 06','subj 07','subj 08','subj 09','subj 10','subj 11','subj 12','subj 13','subj 14','subj 15','subj 16','subj 17','subj 18','subj 19','subj 20','subj 21','subj 22','mean','median'},'Location','northwest');
-xlim([0 34]); % added 24 Oct
-title('Mean & Median Waiting Times in Log scale (N=22)'); 
+ylabel('Average Waiting Times (sec)');
+% xlim([0 34]); % added 24 Oct
+title(['Mean & Median Waiting Times (N=' num2str(length(RPsubjs)) ')']);
 
 %%
 figure;
@@ -268,10 +344,10 @@ for subi= 1: nSubjs
 end
 hold on;
 % plot(s,GbehavStats.mWT,':or','LineWidth',2);
-errorbar(s,.mWT,GbehavStats.semWT,'-or','LineWidth',2,'MarkerEdgeColor','k',...
+errorbar(s,.mWT,GAVGbehav.semWT,'-or','LineWidth',2,'MarkerEdgeColor','k',...
     'MarkerFaceColor','red','MarkerSize',5,'DisplayName','Mean')  % RED= mean
 hold on
-errorbar(s,GbehavStats.mdWT,GbehavStats.semWT,'-sqb','LineWidth',2,'MarkerEdgeColor','k',...
+errorbar(s,GAVGbehav.mdWT,GAVGbehav.semWT,'-sqb','LineWidth',2,'MarkerEdgeColor','k',...
     'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Median') % BLUE= median 
 
 set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf (32s)'}) ;
