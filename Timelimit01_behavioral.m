@@ -173,16 +173,42 @@ ALL_BEHAV= [pickupBehav(subi).RESPTIMES'  pickupBehav(subi).LogRESPS'];
 behavStats= struct('mWT',[],'mdWT', [],'stdWT',[], 'semWT',[], 'minWT',[], 'maxWT',[]); 
 for subi= 1: nSubjs
     for condi= 1:5
-        
+        .
     behavStats.mWT(subi,condi)= nanmean(pickupBehav(subi).good_resps_cond{condi});
     behavStats.mdWT(subi,condi)= nanmedian(pickupBehav(subi).good_resps_cond{condi});
     behavStats.stdWT(subi,condi)= nanstd(pickupBehav(subi).good_resps_cond{condi});
     behavStats.semWT(subi,condi)= sem(pickupBehav(subi).good_resps_cond{condi});
     behavStats.minWT(subi,condi)= nanmin(pickupBehav(subi).good_resps_cond{condi});
     behavStats.maxWT(subi,condi)= nanmax(pickupBehav(subi).good_resps_cond{condi});
+    behavStats.pdWT(subi,condi)= fitdist(pickupBehav(subi).good_resps_cond{condi},'Normal');
+    behavStats.rWT(subi,condi)
+    behavStats.iqrWT(subi,condi)= nanmax(pickupBehav(subi).good_resps_cond{condi});
    
     end
 end
+
+% interquartile range
+
+for condi= 1:5
+%     
+    pd(condi) = fitdist(behavStats.mdWT(:,condi),'Normal');
+    r(condi) = iqr(pd(condi));
+    y(condi,:) = icdf(pd(condi),[0.25,0.75]);
+    
+end
+
+IQR= y;
+
+% max avg response
+
+for condi=1:5; maxWaits(condi)= max(behavStats.mdWT(:,condi)); semMaxWaits(condi)= sem(behavStats.mdWT(:,condi)); end;
+figure; bar(maxWaits);
+
+% min avg response
+
+for condi=1:5; minWaits(condi)= min(behavStats.mdWT(:,condi)); end;
+figure; bar(minWaits);
+
 
 % in log scale
 LogBehavStats= struct('mWT',[],'mdWT', [],'stdWT',[], 'semWT',[], 'minWT',[], 'maxWT',[]); 
@@ -225,8 +251,19 @@ for condi= 1:5
     
     GAVGbehav.minWT(condi)= nanmean(behavStats.minWT(:,condi),1);
     GAVGbehav.maxWT(condi)= nanmean(behavStats.maxWT(:,condi),1);
+    GAVGbehav.semMaxWT(condi)= sem(behavStats.maxWT(:,condi),1);
+    GAVGbehav.semMinWT(condi)= sem(behavStats.minWT(:,condi),1);
     
 end
+
+% plots
+
+figure; bar(GAVGbehav.maxWT,'r','EdgeColor','k','LineWidth',1.5); hold on; er=errorbar(GAVGbehav.maxWT,GAVGbehav.semMaxWT); er.LineStyle = 'none'; er.LineWidth = 2.5;
+title('Average maximal Waiting Times (N= 22)');
+figure; bar(GAVGbehav.minWT,'EdgeColor','k','LineWidth',1.5); hold on; er=errorbar(GAVGbehav.minWT,GAVGbehav.semMinWT); er.LineStyle = 'none'; er.LineWidth = 2.5;
+title('Average minimal Waiting Times (N= 22)');
+
+% Log scale
 
 GAVGLogbehav= [];
 for condi= 1:5
@@ -241,11 +278,107 @@ for condi= 1:5
     
 end
 
-save DescriptiveStats behavStats  LogBehavStats GAVGbehav GAVGLogbehav;
+save DescriptiveStats behavStats  LogBehavStats GAVGbehav GAVGLogbehav IQR;
 
 %% Plots
 % Histograms for the response times distribution across participants 
+%  MEDIANS
+% figfolder = fullfile(parent_folder,'/Figures');
+% cd(figfolder);
 
+h=figure('units','normalized','outerposition',[0 0 1 1])
+
+for condi=1:5
+    
+    subplot(2,5,6);
+    for subi= 1:length(nSubjs)
+        histogram(pickupBehav(subi).RESPTIMES'); %'Normalization','count','BinMethod','auto'
+        hold on;
+        
+    end
+   
+end
+
+for condi=1:5
+    
+    subplot(2,5,6);
+    for subi= 1:length(nSubjs)
+        histogram(pickupBehav(subi).RESPTIMES'); %'Normalization','count','BinMethod','auto'
+        hold on;
+        
+    end
+   
+end
+
+
+x = median_all(1);
+y1=0; y2=max(h1.Values);
+line([x x], [y1 y2],'Color','r','LineWidth',2); %RED: mean
+title('2s')
+% xlim([-60 60])%??
+xlabel('RT 2 sec')
+
+% NOTE: can we put it in a loop?
+h1= histogram(Trlsall_1,20)
+% h1= histogram(condRT_allsubj.mRT(:,1),20)
+hold on
+x = median_all(1);
+y1=0; y2=max(h1.Values);
+line([x x], [y1 y2],'Color','r','LineWidth',2); %RED: mean
+title('2s')
+% xlim([-60 60])%??
+xlabel('RT 2 sec')
+
+subplot(2,3,2)
+h2= histogram(Trlsall_2,20)
+hold on
+x = median_all(2);
+y1=0; y2=max(h2.Values);
+line([x x], [y1 y2],'Color','r','LineWidth',2); %RED: mean
+title('4s')
+% xlim([-60 60])
+xlabel('RT 4 sec')
+
+subplot(2,3,3)
+h3= histogram(Trlsall_3,20)
+hold on
+x = median_all(3);
+y1=0; y2=max(h3.Values);
+line([x x], [y1 y2],'Color','r','LineWidth',2); %RED: mean
+title('8s')
+% xlim([-20 20])
+xlabel('RT 8 sec')
+
+subplot(2,3,4)
+h4= histogram(Trlsall_4,20)
+hold on
+x = median_all(4);
+y1=0; y2=max(h4.Values);
+line([x x], [y1 y2],'Color','r','LineWidth',2); %RED: mean
+title('16s')
+% xlim([-60 60])
+xlabel('RT 16 sec')
+
+subplot(2,3,5)
+h5= histogram(Trlsall_5,20)
+hold on
+x = median_all(5);
+y1=0; y2=max(h5.Values);
+line([x x], [y1 y2],'Color','r','LineWidth',2); %RED: mean
+title('Inf')
+% xlim([-60 60])
+xlabel('RT Inf')
+
+% subplot(2,3,6)
+% h6= histogram(condRT_allsubj.mRT(:,:),20)
+% hold on
+% histogram(condRT_allsubj.mdRT(:,:),20)
+% title('ALL')
+% % xlim([-60 60])
+% xlabel('RT all conds')
+hold on
+filename= ['RTsdistribution_ALLsubjs_.png'];
+saveas(h,filename)
 % Plots as a function of condition
 % linear (?)
 a=2; r=2;n=5;

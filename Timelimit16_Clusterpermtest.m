@@ -24,7 +24,7 @@ statistics_folder= [results_Path, '/Statistics']; % it can be also current_subj_
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Load in useful data
-load 'R_all_ER1'; load 'R_all_ER2'; 
+load 'R_all_ER1'; load 'R_all_ER2'; load 'R_all_ER2Log';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -36,7 +36,7 @@ load 'R_all_ER1'; load 'R_all_ER2';
                 % single-channel
                 % chans= {'EEG030'}; 
                 chans= {'EEG*'};
-                latency= [-2  0];
+                latency= [-2  -1]; %-200ms = point of no return;
                 nsubs = 22;
                 % Prepare the 'design'. Since Fieldrip does not know the the simple t-test
                 % against 0, we have to use the paired t-test (against 0).
@@ -84,18 +84,18 @@ load 'R_all_ER1'; load 'R_all_ER2';
                 stat = ft_timelockstatistics(cfg, R_all{:}, R_contr{:});
 
                 cd(statistics_folder);
-                save stat_corr_ER1b stat; save stat_corr_ER2b stat; 
+                save stat_corr_ER1b stat; save stat_corr_ER2b stat; save stat_corr_ER2Logb stat; save stat_corr_ER2Logc stat; save stat_corr_ER2Logd stat;
 
                 stat.posclusters; stat.negclusters;
                 
           
                 % Plot significant clusters
                 
-                % stat.stat_pos= stat.stat.*(stat.posclusterslabelmat == 1);
-                % cfg_fig= [];
-                % cfg_fig.parameter= 'stat2';
-                % cfg_fig.zlim= 'maxabs';
-                % figure; ft_singleplotTFR(cfg_fig,stat);
+                stat.stat2= stat.stat.*(stat.posclusterslabelmat == 1);
+                cfg_fig= [];
+                cfg_fig.parameter= 'stat2';
+                cfg_fig.zlim= 'maxabs';
+                figure; ft_singleplotER(cfg_fig,stat);
                 % 
                 % stat.stat_neg= stat.stat.*(stat.negclusterslabelmat == 1);
                 % cfg= [];
@@ -109,10 +109,47 @@ load 'R_all_ER1'; load 'R_all_ER2';
                 % cfg.parameter = 'raweffect';
                 % cfg.zlim   = [-1e-27 1e-27];
                 cfg.layout = 'eeg_64_NM20884N.lay';
+                cfg.saveaspng= 'string';  
                 ft_clusterplot(cfg,stat);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                figure;
+                % define parameters for plotting
+                timestep = 0.05;      %(in seconds)
+                sampling_rate = 500;
+                sample_count = length(stat.time);
+                j = [-1:timestep:0];   % Temporal endpoints (in seconds) of the ERP average computed in each subplot
+                m = [1:timestep*sampling_rate:sample_count];  % temporal endpoints in MEEG samples
+                % get relevant (significant) values
+                pos_cluster_pvals = [stat.posclusters(:).prob];
+
+                % In case you have downloaded and loaded the data, ensure stat.cfg.alpha exist
+                if ~isfield(stat.cfg,'alpha'); stat.cfg.alpha = 0.025; end; % stat.cfg.alpha was moved as the downloaded data was processed by an additional FieldTrip function to anonymize the data.
+
+                pos_signif_clust = find(pos_cluster_pvals < stat.cfg.alpha);
+                pos = ismember(stat.posclusterslabelmat, pos_signif_clust);
+
+                % First ensure the channels to have the same order in the average and in the statistical output.
+                % This might not be the case, because ft_math might shuffle the order
+                [i1,i2] = match_str(R_all{1}.label, stat.label);
+
+                % plot
+                for k = 1:20;
+                    subplot(4,5,k);
+                    cfg = [];
+                    cfg.xlim=[j(k) j(k+1)];
+%                     cfg.zlim = [-5e-14 5e-14];
+                    pos_int = zeros(numel(R_all{1}.label),1);
+                    pos_int(i1) = all(pos(i2, m(k):m(k+1)), 2);
+                    cfg.highlight = 'on';
+                    cfg.highlightchannel = find(pos_int);
+                    cfg.comment = 'xlim';
+                    cfg.commentpos = 'title';
+                    cfg.layout = 'eeg_64_NM20884N.lay';
+                    ft_topoplotER(cfg, GAVG_R);
+                end
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Signrank test (move somewhere else?)
 
@@ -141,7 +178,7 @@ load 'R_all_ER1'; load 'R_all_ER2';
                 t0= 3;
                 tAx = [0:2000]./SR - 3;
                 figure; plot(tAx, P(28,:), 'o','Linewidth',2);
-                title('Correlations between RP average amplitudes from -3s to 0s and participants Waiting Times (N=22)');
+                title('Correlations between RP average amplitudes from -1s to -0.2s and participants Waiting Times (N=22)');
                 Xlabel('Time(s)'); Ylabel('P values');%legend('Correlations p-values','P-value= 0.05','Location','Best');
                 hold on; plot([tAx(1) tAx(end)],[0.05 0.05],'r','Linewidth',2);
                 txt = 'P-value= 0.05';
