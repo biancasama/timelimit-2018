@@ -28,6 +28,19 @@ load 'R_all_ER1'; load 'R_all_ER2'; load 'R_all_ER2Log';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+RPsubjs= [3  6  7  8  10  13  15  17  18  19   20   21];
+nSubjs= length(RPsubjs);
+R_all=R_all';
+
+R_some= {};
+for subi=1:nSubjs;
+    R_some{subi}= R_all{RPsubjs(subi)}
+end
+
+R_some= R_some';
+
+
+isequal(R_all{13},R_some{6}); % IT WORKS but you should automatize it
 
 % Run cluster test
 
@@ -36,8 +49,8 @@ load 'R_all_ER1'; load 'R_all_ER2'; load 'R_all_ER2Log';
                 % single-channel
                 % chans= {'EEG030'}; 
                 chans= {'EEG*'};
-                latency= [-2  -1]; %-200ms = point of no return;
-                nsubs = 22;
+                latency= [-3  0]; %-200ms = point of no return;
+                nSubs = 12;
                 % Prepare the 'design'. Since Fieldrip does not know the the simple t-test
                 % against 0, we have to use the paired t-test (against 0).
                 design = zeros(2, 2*nSubjs);
@@ -50,7 +63,7 @@ load 'R_all_ER1'; load 'R_all_ER2'; load 'R_all_ER2Log';
                 R_contr= {};
                 for subi=1:nSubjs;
 
-                    templateER.avg = R_all{subi}.avg;
+                    templateER.avg = R_some{subi}.avg;
                     R_contr{subi}= templateER;
                     R_contr{subi}.avg= zeros(nChans,nTimes)
                 end
@@ -81,10 +94,11 @@ load 'R_all_ER1'; load 'R_all_ER2'; load 'R_all_ER2Log';
                 cfg.neighbours = neighbs;
 
                 % STATS  
-                stat = ft_timelockstatistics(cfg, R_all{:}, R_contr{:});
+                stat = ft_timelockstatistics(cfg, R_some{:}, R_contr{:}); %R_all
 
                 cd(statistics_folder);
-                save stat_corr_ER1b stat; save stat_corr_ER2b stat; save stat_corr_ER2Logb stat; save stat_corr_ER2Logc stat; save stat_corr_ER2Logd stat;
+                save stat_corr_ER1b stat; save stat_corr_ER2b stat; save stat_corr_ER2Logb stat; save stat_corr_ER2Logc stat; save stat_corr_ER2Loge stat;
+                save stat_corr_ER2Logf stat; save stat_corr_ER2Logg stat; save stat_corr_ER2Logh stat;
 
                 stat.posclusters; stat.negclusters;
                 
@@ -109,7 +123,7 @@ load 'R_all_ER1'; load 'R_all_ER2'; load 'R_all_ER2Log';
                 % cfg.parameter = 'raweffect';
                 % cfg.zlim   = [-1e-27 1e-27];
                 cfg.layout = 'eeg_64_NM20884N.lay';
-                cfg.saveaspng= 'string';  
+                cfg.saveaspng= 'clusterplot4';  
                 ft_clusterplot(cfg,stat);
 
                 figure;
