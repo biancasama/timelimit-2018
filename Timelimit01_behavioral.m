@@ -264,6 +264,21 @@ for condi= 1:5
     
 end
 
+% Log scale
+
+GAVGLogbehav= [];
+for condi= 1:5
+    
+    GAVGLogbehav.mWT(condi)= nanmean(LogBehavStats.mWT(:,condi),1);
+    GAVGLogbehav.mdWT(condi)= nanmean(LogBehavStats.mdWT(:,condi),1);
+    GAVGLogbehav.stdWT(condi)= nanmean(LogBehavStats.stdWT(:,condi),1);
+    GAVGLogbehav.semWT(condi)= nanmean(LogBehavStats.semWT(:,condi),1);
+    
+    GAVGLogbehav.minWT(condi)= nanmean(LogBehavStats.minWT(:,condi),1);
+    GAVGLogbehav.maxWT(condi)= nanmean(LogBehavStats.maxWT(:,condi),1);
+    
+end
+
 % Save variables 
 
 save DescriptiveStats behavStats  LogBehavStats GAVGbehav GAVGLogbehav IQR;
