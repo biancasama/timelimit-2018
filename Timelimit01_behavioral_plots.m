@@ -37,10 +37,63 @@ clear LevelAnalysis name numlines prompt subj_folders
 behavioral_folder= [results_Path, '/Behaviour']; % it can be also current_subj_folder
 if ~exist(fullfile(behavioral_folder)); mkdir(fullfile(behavioral_folder)); end;
 
+    
 %% Load behavioral data 
 
 cd(behavioral_folder);
 load 'DescriptiveStats'; load 'pickupBehav';
+
+%% BOX-plots
+
+% documentation: https://fr.mathworks.com/matlabcentral/answers/398012-adding-a-scatter-of-points-to-a-boxplot
+
+% better keep everything in log scale
+myData= LogBehavStats.mdWT; % behavStats.mdWT or LogBehavStats.mdWT
+figure;
+H= boxplot(myData,'Notch','on','Labels',{'2s','4s','8s','16s','Inf'},'Whisker',1);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% filled box version
+% get(H,'tag');
+% set(H,'Color','k','LineWidth',2);
+Colors= {[0.8500 0.3250 0.0980],[0.9290 0.6940 0.1250],[0.4660 0.6740 0.1880],[0 0.4470 0.7410],[0.4940 0.1840 0.5560]}; % rainbow scale of colors
+% h= findobj(gca,'Tag','Box');
+% for i=1:length(h)
+%     patch(get(h(i),'XData'),get(h(i),'YData'),'Colors',Colors(h),'FaceAlpha',0.5);
+% end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% empty box but working version
+lines = findobj(gcf, 'type', 'line', 'Tag', 'Median');
+set(lines, 'Color', 'g');
+% Change the boxplot color from blue to green
+a = get(get(gca,'children'),'children');   % Get the handles of all the objects
+t = get(a,'tag');   % List the names of all the objects 
+box1 = a(7);   % The 7th object is the first box
+set(a, 'Color', 'b');   % Set the color of the first box to green
+hold on;
+% add somerandomness 
+x1=ones(length(myData(:,1))).*(1+(rand(length(myData(:,1))-0.5)/5));
+x2=ones(length(myData(:,2))).*(1+(rand(length(myData(:,2)-0.5)/10));
+x3=ones(length(myData(:,3))).*(1+(rand(length(myData(:,3))-0.5)/15));
+x4=ones(length(myData(:,4))).*(1+(rand(length(myData(:,4))-0.5)/20));
+x5=ones(length(myData(:,5))).*(1+(rand(length(myData(:,5))-0.5)/25));
+
+x1=ones(length(myData(:,1)));
+x2=ones(length(myData(:,2)));
+x3=ones(length(myData(:,3)));
+x4=ones(length(myData(:,4)));
+x5=ones(length(myData(:,5)));
+
+f1=scatter(x1(:,1),myData(:,1),'k','filled');f1.MarkerFaceAlpha = 0.4;hold on 
+f2=scatter(x2(:,2).*2,myData(:,2),'k','filled');f2.MarkerFaceAlpha = f1.MarkerFaceAlpha;hold on;
+f3=scatter(x3(:,3).*3,myData(:,3),'k','filled');f3.MarkerFaceAlpha = f1.MarkerFaceAlpha;hold on;
+f4=scatter(x4(:,4).*4,myData(:,4),'k','filled');f4.MarkerFaceAlpha = f1.MarkerFaceAlpha;hold on;
+f5=scatter(x5(:,5).*5,myData(:,5),'k','filled');f5.MarkerFaceAlpha = f1.MarkerFaceAlpha;hold on;
+
+ylim([0,max(myData(:,5))+std(myData(:,5))]); % not sure if it's working right now...
+xlabel('Conditions (sec)','FontSize',34);
+ylabel('Waiting Times (log scale)','FontSize',34);
+title('Waiting Times per condition across all participants (N=22)','FontSize',34); 
+
 
 %% BAR plots (not used for the paper)
 % Used SEM from mean and not medians but plotting medians
@@ -489,54 +542,152 @@ ylabel('Average Waiting Times (sec)');
 % xlim([0 34]); % added 24 Oct
 title(['Mean & Median Waiting Times (N=' num2str(length(RPsubjs)) ')']);
 
-%% BOX-plots
 
-% documentation: https://fr.mathworks.com/matlabcentral/answers/398012-adding-a-scatter-of-points-to-a-boxplot
+%% Standard deviations
+mycolormap= [0.8500 0.3250 0.0980; 0.9290 0.6940 0.1250; 0.4660 0.6740 0.1880; 0 0.4470 0.7410; 0.4940 0.1840 0.5560]; 
+myData= behavStats.stdWT; % behavStats.stdWT or LogBehavStats.mdWT
 
-figure;
-boxplot(behavStats.mdWT);
-z= 1:5;
-set(gca,'xtick',z, 'xticklabel',{'2s','4s','8s','16s','Inf (32s)'}) ;
-xlabel('Conditions (sec)');
-ylabel('Waiting Times (sec)');
-title('Waiting Times per condition across all participants (N=22)'); 
-
-load carsmall MPG              % the sample dataset variable
-MPG(:,2)=MPG(:,1).*2;
-MPG(:,3)=MPG(:,1).*3;
-boxplot(MPG,'Notch','on','Labels',{'mu = 5','mu = 6','mu = 6'},'Whisker',1)
-lines = findobj(gcf, 'type', 'line', 'Tag', 'Median');
-set(lines, 'Color', 'g');
-% Change the boxplot color from blue to green
-a = get(get(gca,'children'),'children');   % Get the handles of all the objects
-%t = get(a,'tag');   % List the names of all the objects 
-%box1 = a(7);   % The 7th object is the first box
-set(a, 'Color', 'r');   % Set the color of the first box to green
-hold on
-x=ones(length(MPG)).*(1+(rand(length(MPG))-0.5)/5);
-x1=ones(length(MPG)).*(1+(rand(length(MPG))-0.5)/10);
-x2=ones(length(MPG)).*(1+(rand(length(MPG))-0.5)/15);
-f1=scatter(x(:,1),MPG(:,1),'k','filled');f1.MarkerFaceAlpha = 0.4;hold on 
-f2=scatter(x1(:,2).*2,MPG(:,2),'k','filled');f2.MarkerFaceAlpha = f1.MarkerFaceAlpha;hold on;
-f3=scatter(x2(:,3).*3,MPG(:,3),'k','filled');f3.MarkerFaceAlpha = f1.MarkerFaceAlpha;hold on;
-
-%% Standard deviations alone
-
-figure;
+f1=figure('color','white');
 for condi= 1: 5
     
-    plot(behavStats.stdWT(:,condi),'o');
+    p=plot(myData(:,condi),'o','Color',mycolormap(condi,:),'LineWidth',1,'MarkerSize',15,'MarkerFaceColor',mycolormap(condi,:));
+   
     hold on;
     
 end
-% set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf (32s)'}) ;
-% % set(gca,'ytick',behavStats.stdWT(:,1), 'yticklabel',{'subj 01','subj 02', 'subj 03','subj 04','subj 05','subj 06','subj 07','subj 08','subj 09','subj 10','subj 11','subj 12','subj 13','subj 14','subj 15','subj 16','subj 17','subj 18','subj 19','subj 20','subj 21','subj 22'});
-% xlabel('Conditions (sec)');
-% ylabel('Waiting Times (sec)');
-% legend({'subj 01','subj 02', 'subj 03','subj 04','subj 05','subj 06','subj 07','subj 08','subj 09','subj 10','subj 11','subj 12','subj 13','subj 14','subj 15','subj 16','subj 17','subj 18','subj 19','subj 20','subj 21','subj 22','mean','median'},'Location','northwest');
-% xlim([0 34]); % added 24 Oct
-% title('Std Waiting Times (N=22)');
+% Create rectangle
+annotation(f1,'rectangle',...
+    [0.150498997995992 0.11756061719324 0.0202424849699399 0.120499632623071],...
+    'Color',[0.501960784313725 0.501960784313725 0.501960784313725],...
+    'LineWidth',3);
 
-%% RAINCLOUDS
+% Create rectangle
+annotation(f1,'rectangle',...
+    [0.24348496993988 0.11756061719324 0.0202424849699399 0.111682586333578],...
+    'Color',[0.501960784313725 0.501960784313725 0.501960784313725],...
+    'LineWidth',3);
+
+% Create rectangle
+annotation(f1,'rectangle',...
+    [0.367332665330663 0.11756061719324 0.0202424849699399 0.22556943423953],...
+    'Color',[0.501960784313725 0.501960784313725 0.501960784313725],...
+    'LineWidth',3);
+
+% Create rectangle
+annotation(f1,'rectangle',...
+    [0.429456913827656 0.11756061719324 0.0202424849699399 0.22556943423953],...
+    'Color',[0.501960784313725 0.501960784313725 0.501960784313725],...
+    'LineWidth',3);
+
+% Create rectangle
+annotation(f1,'rectangle',...
+    [0.274346693386775 0.11756061719324 0.0202424849699399 0.0830271858927261],...
+    'Color',[0.501960784313725 0.501960784313725 0.501960784313725],...
+    'LineWidth',3);
+
+% Create rectangle
+annotation(f1,'rectangle',...
+    [0.801801603206414 0.11756061719324 0.0202424849699399 0.093313739897134],...
+    'Color',[0.501960784313725 0.501960784313725 0.501960784313725],...
+    'LineWidth',3);
+
+% Create rectangle
+annotation(f1,'rectangle',...
+    [0.615428857715432 0.11756061719324 0.0202424849699399 0.0815576781778102],...
+    'Color',[0.501960784313725 0.501960784313725 0.501960784313725],...
+    'LineWidth',3);
+
+% set(gca,'ytick',1:5, 'yticklabel',{'2s','4s','8s','16s','Inf'}) ;
+box off;
+set(gca,'xtick',1:22, 'xticklabel',{'01','02', '03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22'},'FontSize',28);
+xlabel('Subjects (numbers)');
+ylabel('Waiting Times std (sec)');
+l=legend({'2s','4s','8s','16s','Inf','Non-Timers'},'FontSize',34);
+% legend boxoff;
+title('Std Waiting Times (N=22)','FontSize',34);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Is the Standard deviation scaled with the Mean?
+
+
+X= behavStats.mdWT;
+Y= behavStats.stdWT;
+sz = 15;
+f3=figure('color','white');
+for condi= 1: 5
+    
+%     c= mycolormap(condi,:);
+    plot(X(:,condi),Y(:,condi),'o','Color',mycolormap(condi,:),'LineWidth',1,'MarkerSize',15,'MarkerFaceColor',mycolormap(condi,:))
+   
+    hold on;
+    
+end
+box off;
+set(gca,'FontSize',28);
+xlabel('Mean Waiting Times (sec)','FontSize',34);
+ylabel('Waiting Times std(sec)','FontSize',34);
+title('Std is scaled with the mean','FontSize',34);
+l=legend({'2s','4s','8s','16s','Inf'},'FontSize',34);
+str={'R= 0.88'};
+t= text(12,3,str,'FontSize',34);
+
+%% RAINCLOUDplots
 
 % documentation: Micah Alleh
+
+% --------------------------
+% Example: h = raincloud('X', myData, 'box_on', 1, 'color', [0.5 0.5 0.5]) 
+% Parameters 
+Colors= {[0.8500 0.3250 0.0980],[0.9290 0.6940 0.1250],[0.4660 0.6740 0.1880],[0 0.4470 0.7410],[0.4940 0.1840 0.5560]};
+Cond_names= [2 4 8 16 Inf];
+x_limits= {[0 2],[0 4],[0 8],[0 16],[0 Inf]};
+ylims= [
+%'box_dodge' ,1,'box_dodge_amount',.15,'dot_dodge_amount',.35,'box_col_match',1
+
+%% Medians
+
+figure('color','white');
+for condi= 1:5
+    %figure('color','white');
+    ax(condi)=subplot(2,5,condi);
+    subplot(ax(condi));
+%     axis([ax(condi).XLim 0 3]);
+    
+    myData= behavStats.mdWT(:,condi);
+    mycolors= Colors{condi};
+    h=raincloud_plot('X',myData,'color',mycolors,'alpha',.7,'line_width',1,'box_on', 1); 
+    
+    title(['Condition ' num2str(Cond_names(condi)) ' sec'],'FontSize',20);
+    set(ax(condi),'fontsize', 20);
+    xlabel('Waiting times (sec)', 'fontsize', 18);
+%     xticks([0:.5:2]);
+    box off;
+    hold on;
+end
+    
+
+% all trials
+    for condi= 1:length(Posiz1)
+        %     figure;
+        ax(condi)=subplot(2,5,condi);
+        subplot(ax(condi));
+        title(['Condition ' num2str(Cond_names(condi)) ' sec']);
+        axis([ax(condi).XLim 0 0.6]);
+        %     set(gcf,'color','w');
+        figure();
+        for subi= 1:22
+            myData= pickupBehav(subi).good_resps_cond{condi};
+            mycolors= Colors{condi};
+            h=raincloud_plot('X',myData,'color',mycolors,'FaceAlpha',0.6); %
+
+            hold on;
+        end
+        hold on;
+    end
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% END
