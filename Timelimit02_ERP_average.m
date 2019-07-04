@@ -142,7 +142,7 @@ for subi=1:nSubjs; %nSubjs
         cfg=[];
         cfg.trials= find(newcond == un_conds(condi));
         cfg.keeptrials  = 'yes';
-        avg_condTrl = ft_timelockanalysis(cfg,DATA_CLEAN);
+        avg_condTrl{condi} = ft_timelockanalysis(cfg,DATA_CLEAN);
         
     end
      
