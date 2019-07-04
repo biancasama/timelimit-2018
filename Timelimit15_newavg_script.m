@@ -6,11 +6,14 @@
 
 %{
 
-    SCOPE: compute the 
+    SCOPE: compute the movement-timelocked ERP average within subject and
+    between subject (grandaverage)for all channels for all time points
+    within the window -3s 0s.
 
-    OUTPUT: avg{condi} in 
+    OUTPUT: avg_cond, avg_trl, avg_one, avg_condTrl;  TimeSmatrix,
+    Grand_ER.
 
-    FIXME: 
+    FIXME: **
 
 %}
 %=========================================================================%
@@ -31,6 +34,29 @@ BT_getsubj
 
 clear LevelAnalysis name numlines prompt subj_folders 
 
+%% More specific paths (maybe set this in the start script)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+behavioral_folder= [results_Path, '/Behaviour']; % it can be also current_subj_folder
+if ~exist(fullfile(behavioral_folder)); mkdir(fullfile(behavioral_folder)); end;
+
+timeseries_folder= [results_Path, '/Timeseries']; % it can be also current_subj_folder
+if ~exist(fullfile(timeseries_folder)); mkdir(fullfile(timeseries_folder)); end;
+cd(timeseries_folder);
+
+powerspectra_folder= [results_Path, '/Powerspect']; % it can be also current_subj_folder
+    if ~exist(fullfile(powerspectra_folder)); mkdir(fullfile(powerspectra_folder)); end;
+    cd(powerspectra_folder);
+    
+correlation_folder= [results_Path, '/Correlations']; % it can be also current_subj_folder
+    if ~exist(fullfile(correlation_folder)); mkdir(fullfile(correlation_folder)); end;  
+    
+regression_folder= [results_Path, '/Regressions']; % it can be also current_subj_folder
+    if ~exist(fullfile(regression_folder)); mkdir(fullfile(regression_folder)); end;
+    
+statistics_folder= [results_Path, '/Statistics']; % it can be also current_subj_folder
+    if ~exist(fullfile(statistics_folder)); mkdir(fullfile(statistics_folder)); end;
+    
 %% Load preprocessed files or 
 
 for subi=1:nSubjs; %nSubjs
@@ -70,24 +96,61 @@ for subi=1:nSubjs; %nSubjs
     % cfg.baselinewindow = [-0.005 0.005]; % Khalighnejad/Haggard's baseline
 %     DATA_CLEAN= ft_selectdata(cfg,DATA_REJ_INTERP);
     DATA_CLEAN= ft_preprocessing(cfg,DATA_REJ_INTERP);
-    % DATA_bl = ft_preprocessing(cfg,DATA_REJ_INTERP); % In case you apply
-    % baseline
+    % DATA_bl = ft_preprocessing(cfg,DATA_REJ_INTERP); % If you apply baseline
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
-    avg_trl=[];
-    %         for condi = 1:length(un_conds)
     
+    % avg_cond
+    
+    avg_cond=[];
+    
+    for condi = 1:length(un_conds)
+        
+        cfg=[];
+        cfg.trials= find(newcond == un_conds(condi));
+        avg_cond{condi} = ft_timelockanalysis(cfg,DATA_CLEAN);
+        
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    % avg_trl
+    
+    avg_trl=[];
+   
     cfg=[];
-    %             cfg.trials= find(newcond == un_conds(condi));
     cfg.keeptrials  = 'yes';
     avg_trl = ft_timelockanalysis(cfg,DATA_CLEAN);
-    %             avg{condi} = ft_timelockanalysis(cfg,DATA_CLEAN);
     
-    %         end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   
+    % avg_one : you will need it for the template for the cluster test
+    
+    avg_one=[];
+    
+    cfg=[];
+    avg_one = ft_timelockanalysis(cfg,DATA_CLEAN);
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    % avg_condTrl : you will need it for the fancy plot
+    
+    avg_condTrl=[];
+    
+    for condi = 1:length(un_conds)
+        
+        cfg=[];
+        cfg.trials= find(newcond == un_conds(condi));
+        cfg.keeptrials  = 'yes';
+        avg_condTrl = ft_timelockanalysis(cfg,DATA_CLEAN);
+        
+    end
+     
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
         
-    % Save averages time-series
+    %% Save averages time-series
     
     % Create the folder if it doesn't exist already
     
@@ -95,12 +158,22 @@ for subi=1:nSubjs; %nSubjs
     if ~exist(fullfile(timeseries_folder)); mkdir(fullfile(timeseries_folder)); end;
     cd(timeseries_folder);
     
+    % avg_cond
+    filename= [sprintf('subj%02d_TimeS_bytrial', subi)]; % add one if all trials mixed by condition
+    save(filename,'avg_cond','-v7.3');
+    % avg_trl
     filename= [sprintf('subj%02d_TimeS_bytrial', subi)]; % add one if all trials mixed by condition
     save(filename,'avg_trl','-v7.3');
+    % avg_one
+    filename= [sprintf('subj%02d_TimeS_bytrial', subi)]; % add one if all trials mixed by condition
+    save(filename,'avg_one','-v7.3');
+    % avg_condTrl
+    filename= [sprintf('subj%02d_TimeS_bytrial', subi)]; % add one if all trials mixed by condition
+    save(filename,'avg_condTrl','-v7.3');
     
     disp(['Subject ' num2str(subi) ' done']);
 
-end
+end % of the whole loop across nSubjs
 
 % filename= [sprintf('subj%02d_usefulinfo', subi)]; % add one if all trials mixed by condition
 % save(filename,'newcond','-v7.3');
@@ -112,54 +185,49 @@ cd([results_Path, '/Timeseries']);
 %disp('END of TIME-SERIES ANALYSIS by condition per subject');
 disp('END of TIME-SERIES ANALYSIS per subject');
 
-%% Grandaverage
+%% GRANDAVERAGE 
 nSubjs= 22;
 %~~~ Other
-OKsubjs= [3 6 7 8 10 13 15 17 18 19 20 21];
+OKsubjs= [3 6 7 8 10 13 15 17 18 19 20 21]; % done with the 1µV method assessment 
 
 cd(pwd);
 for subi=1:nSubjs;
     
-    fname_TimeS= sprintf('subj%02d_TimeS_one',subi);
-    pickupTimeS(subi) = load(fname_TimeS);
+    fname_ER= sprintf('subj%02d_TimeS_one',subi);
+    pickupER(subi) = load(fname_ER);
    
 end
+% 
+% save pickupER_cond pickupER;
 
+%%
+TimeSmatrix=[];
 
-% %
-% TimeSmatrix=[];
-% for subi= 1:nSubjs; %nGoodSubjects
-%     
-%     for k= 1:5
-%         TimeSmatrix{subi,k}= pickupTimeS(subi).TFR{k}; %pickupSub(i).avg_EEG{k}
-%     end
-% end
-% 
-% save TimeSmatrix TimeSmatrix
-% 
-% Grand_TFR=[]; 
-% for k= 1:5
-%     
-% %     cfg=[];
-% %   
-% %     cfg.channel = {'EEG020','EEG021','EEG029','EEG030','EEG031','EEG039','EEG040'};
-%     Grand_TFR{k}= ft_freqgrandaverage([],TimeSmatrix{:,k});
-% %     Grand_Freq_ROI{k}= mean(Grand_Freq{k}.powspctrm,1);
-%     
-% end
-% 
-% save Grand_TFR Grand_TFR
-% 
-% cfg=[];
-% cfg.baseline= [-2 -1.5];
-% cfg.baselinetype= 'relative';
-% % cfg.zlim= [-3e-25 3e-25];
-% cfg.xlim= [-1 -0];
-% % cfg.ylim= [8 30];
-% % cfg.ylim= [15 30];
-% cfg.layout = 'eeg_64_NM20884N.lay';
-% cfg.linewidth = 2;
-% cfg.showlabels= 'yes';
-% figure
-% ft_multiplotTFR(cfg,Grand_TFR);%Grand_TFR{2},Grand_TFR{3},Grand_TFR{4},Grand_TFR{5}
-% % ft_topoplotTFR(cfg,Grand_TFR{2});
+for subi= 1:nSubjs; 
+ 
+    for k= 1:5
+        TimeSmatrix{subi,k}= pickupER(subi).avg_cond{k}; % or avg_condTrl or avg_trl or avg_one
+    end
+
+end
+
+save TimeSmatrix TimeSmatrix;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Grand_ER=[]; 
+
+for k= 1:5
+    
+    cfg=[];
+%     cfg.keepindividual= 'yes';
+%     cfg.channel = {'EEG020','EEG021','EEG029','EEG030','EEG031','EEG039','EEG040'};
+    Grand_ER{k}= ft_timelockgrandaverage(cfg,TimeSmatrix{:,k});
+
+end
+
+save Grand_ER_Ind Grand_ER
+
+%% END of the script
+
+fprintf('\n END: DATA SAVED \n')
