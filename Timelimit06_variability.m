@@ -14,7 +14,8 @@
     std.
 
     FIXME: loop for within-trial variability (it doesn't compute for all
-    channels).
+    channels). is still true? % filename= [sprintf('subj%02d_usefulinfo'
+    WHAT WAS FOR?
  
 
 %}
@@ -34,193 +35,252 @@ BT_setpath
 % choose subj & go to the right folder
 BT_getsubj
 
-clear LevelAnalysis name numlines prompt subj_folders 
+clear LevelAnalysis name numlines prompt subj_folders;
 
-%% Load preprocessed files or 
-
-if subjnum== 1 || subjnum== 18 || subjnum== 19 || subjnum== 20 || subjnum== 21 || subjnum== 22
-    load(sprintf('TimeLimit_v2_Resp_subj%02d_EEG_clean_concat_rej_interp',subjnum))
-else
-    load(sprintf('TimeLimit_2_subj%02d_EEG_clean_concat_rej_interp',subjnum))
-end
-% load([current_subj_folder,'/Behavioral/GOOD_BEHAV.mat']);
-
-%% Compute average here (*timelockanalysis*)
+%% More specific paths (maybe set this in the start script)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Setting up indexes for getting only the good trials
 
-[idx_goodxcond,idx_goodtrls, idx_allbadtrls]= BTmy_cleandatamore(TRIALS);
+behavioral_folder= [results_Path, '/Behaviour']; % it can be also current_subj_folder
+if ~exist(fullfile(behavioral_folder)); mkdir(fullfile(behavioral_folder)); end;
 
-good_trls = setdiff([1:length(DATA_REJ_INTERP.trial)],idx_allbadtrls);
+timeseries_folder= [results_Path, '/Timeseries']; % it can be also current_subj_folder
+if ~exist(fullfile(timeseries_folder)); mkdir(fullfile(timeseries_folder)); end;
+cd(timeseries_folder);
 
-if isequal(idx_goodtrls',good_trls)==1; disp('YES'); else disp('NO'); end;
+powerspectra_folder= [results_Path, '/Powerspect']; % it can be also current_subj_folder
+    if ~exist(fullfile(powerspectra_folder)); mkdir(fullfile(powerspectra_folder)); end;
+    cd(powerspectra_folder);
+    
+correlation_folder= [results_Path, '/Correlations']; % it can be also current_subj_folder
+    if ~exist(fullfile(correlation_folder)); mkdir(fullfile(correlation_folder)); end;  
+    
+regression_folder= [results_Path, '/Regressions']; % it can be also current_subj_folder
+    if ~exist(fullfile(regression_folder)); mkdir(fullfile(regression_folder)); end;
+    
+statistics_folder= [results_Path, '/Statistics']; % it can be also current_subj_folder
+    if ~exist(fullfile(statistics_folder)); mkdir(fullfile(statistics_folder)); end;
+    
+%% Load preprocessed files, clean from behavioural artifacts, postprocess
 
-% redundant but we redo it just in case
-cond= [TRIALS.cond]; %we put all the conditions in a row
-cond(cond==32) = Inf;
-un_conds = unique(cond);
-newcond= cond(good_trls);
+for subi=1:nSubjs; %nSubjs
+    
+    cd([data_Path, sprintf('/subj%02d', subi)])
+%     current_subj_folder= fullfile(data_Path, subj_folders(subi).name);
+%     cd(current_subj_folder);
+    
+    if subi== 1 || subi== 18 || subi== 19 || subi== 20 || subi== 21 || subi== 22
+        load(sprintf('TimeLimit_v2_Resp_subj%02d_EEG_clean_concat_rej_interp',subi))
+    else
+        load(sprintf('TimeLimit_2_subj%02d_EEG_clean_concat_rej_interp',subi))
+    end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Setting up indexes for getting only the good trials
+    
+    [idx_goodxcond,idx_goodtrls, idx_allbadtrls]= BTmy_cleandatamore(TRIALS);
+    
+    good_trls = setdiff([1:length(DATA_REJ_INTERP.trial)],idx_allbadtrls);
+    
+    if isequal(idx_goodtrls',good_trls)==1; disp('YES'); else disp('NO'); end;
+    
+    % redundant but we redo it just in case
+    cond= [TRIALS.cond]; %we put all the conditions in a row
+    cond(cond==32) = Inf;
+    un_conds = unique(cond);
+    newcond= cond(good_trls);
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Compute variability here (cfr. Khalighinejad et al. 2018)
+    % You need to use the output of average computation above (=from
+    % timelockanalysis). Because the fieldtrip function doesn't read in the
+    % 'var' alone, we need to use the 'avg' denomination, so we take the variability from
+    % the overall file that contains also the average information (avg.avg
+    % would be the mean only).
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    % Across-trial variability
+    % WARNING: needs to be baseline corrected to replicate the same findings
+    % Re-preprocessing data for further analyses
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Re-preprocessing data for further analyses 
+    % Re-preprocessing data for further analyses
     cfg=[];
     cfg.trials = good_trls;
     cfg.lpfilter= 'yes';
-    cfg.lpfreq = 30; % alternatively filter at 20Hz (2 Hz!!);
+    cfg.lpfreq = 40; % alternatively filter at 20Hz (2 Hz!!);
     cfg.demean='yes';
-    % cfg.baselinewindow = [-0.005 0.005]; % Khalighnejad/Haggard's baseline
-    DATA_CLEAN= ft_preprocessing(cfg,DATA_REJ_INTERP);
-    % DATA_bl = ft_preprocessing(cfg,DATA_REJ_INTERP); % In case you apply
-    % baseline 
+    cfg.baselinewindow = [-0.005 0.005]; % Khalighnejad/Haggard's baseline
+%     DATA_CLEAN= ft_selectdata(cfg,DATA_REJ_INTERP);
+%     DATA_CLEAN= ft_preprocessing(cfg,DATA_REJ_INTERP);
+    DATA_bl = ft_preprocessing(cfg,DATA_REJ_INTERP); % If you apply baseline
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    % avg_cond
+    
+    avg_cond=[]; across_stdev_cond=[];
+    
+    for condi = 1:length(un_conds)
+        
+        cfg=[];
+        cfg.trials= find(newcond == un_conds(condi));
+        avg_cond{condi} = ft_timelockanalysis(cfg,DATA_bl);
+        across_stdev_cond{condi} = avg_cond{condi}; % we rename it to avoid confusion
+        across_stdev_cond{condi}.avg = sqrt(across_stdev_cond{condi}.var); % we call it avg but it's std
+    end
+    
+    disp('END timelock VARIABILITY');
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   
+    % avg_one (UNCHECKED CODE): you will need it for the template for the cluster test
+    
+    avg_one=[];
+    
+    cfg=[];
+    avg_one = ft_timelockanalysis(cfg,DATA_bl);
+    across_stdev_one = avg_one; % we rename it to avoid confusion
+    across_stdev_one.avg = sqrt(across_stdev_one.var); % we call it avg but it's std
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Within-trial variability (check why it wasn't working for multiple channels)
+    % WARNING: needs to be baseline corrected to replicate the same findings
+    
+    % all conds together (not very informative) - UNCHECKED CODE
+    
+    within_std_trl = [];
+    
+    for i=1:length(good_trls) % length of goodtrls
+        within_std_trl{i}(:,:) = movstd(DATA_bl.trial{i}(:,:),25); %50
+    end
+        
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-        avg=[];
-        for condi = 1:length(un_conds)
             
-            cfg=[];
-            cfg.trials= find(newcond == un_conds(condi));
-            avg{condi} = ft_timelockanalysis(cfg,DATA_CLEAN);
-        %     avg{condi} = ft_timelockanalysis(cfg,DATA_bl);
-        %     mean_avg{condi} = avg{condi}.avg; % ???
+end % the whole for loop
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    % by cond
+    
+    within_std_cond = [];
+    
+    for condi = 1:length(un_conds) 
+        good_trls= find(newcond == un_conds(condi));
+        
+        for i=1:length(good_trls) % length of goodtrls
+            within_std_cond{condi}{i}(:,:) = movstd(DATA_bl.trial{i}(:,:),25); %50 
         end
+        
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-disp('END of TIMELOCK by condition')
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-check= isequal(avg{1}.avg,avg{2}.avg,avg{3}.avg,avg{4}.avg,avg{5}.avg);
-if check==1; disp('RE-DO'); else disp('CORRECT'); end;
-
-clear ans answer check 
-
-%% Visualization averages timeseries 
-% It can be improved with other plot functions
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Timeseries
-
-figure
-cfg=[];
-cfg.layout = 'eeg_64_NM20884N.lay';
-% cfg.preproc.lpfilter= 'yes';
-% cfg.preproc.lpfreq= 35;
-cfg.linewidth = 2;
-ft_multiplotER(cfg,avg{1},avg{2},avg{3},avg{4},avg{5});
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Topography? 
-
-%% Save averages timeseries
-
-% Create the folder if it doesn't exist already.
-if input('Save TIMELOCKED AVERAGES results? RISK OF OVERWRITING  (1/0) ... ')
+    % Save averages time-series
+    
+    % Create the folder if it doesn't exist already
     
     timeseries_folder= [results_Path, '/Timeseries']; % it can be also current_subj_folder
     if ~exist(fullfile(timeseries_folder)); mkdir(fullfile(timeseries_folder)); end;
     cd(timeseries_folder);
     
-    filename= [sprintf('subj%02d_RP_avg', subjnum)];
-    save(filename, 'DATA_CLEAN', 'avg', 'subjnum');
-    %     save RP_avg avg % choose a proper name and do not change it
-    %     save RP_avg_bl avg % if baseline corrected
+    % avg_cond
+    filename= [sprintf('subj%02d_ERPbl_cond', subi)]; % add one if all trials mixed by condition
+    save(filename,'avgBL_cond','across_stdev_cond'-v7.3');
+    % avg_trl
+    filename= [sprintf('subj%02d_ERPbl_bytrial', subi)]; % add one if all trials mixed by condition
+    save(filename,'avgBL_trl','within_stdev_trl','-v7.3');
+    % avg_one
+    filename= [sprintf('subj%02d_ERPbl_one', subi)]; % add one if all trials mixed by condition
+    save(filename,'avgBL_one','across_stdev_one','-v7.3');
+    % avg_condTrl
+    filename= [sprintf('subj%02d_ERPbl_condTrl', subi)]; % add one if all trials mixed by condition
+    save(filename,'avgBL_condTrl','within_stdev_cond','-v7.3');
     
-end
+    disp(['Subject ' num2str(subi) ' done']);
 
-%% Compute variability here (cfr. Khalighinejad et al. 2018)
-% You need to use the output of average computation above (=from
-% timelockanalysis). Because the fieldtrip function doesn't read in the
-% 'var' alone, we need to use the 'avg' denomination, so we take the variability from
-% the overall file that contains also the average information (avg.avg
-% would be the mean only).
+end % of the whole loop across nSubjs
 
-%% Across-trial variability
-% WARNING: needs to be baseline corrected to replicate the same findings
-% Re-preprocessing data for further analyses 
-    cfg=[];
-    cfg.trials = good_trls;
-    cfg.lpfilter= 'yes';
-    cfg.lpfreq = 30; % alternatively filter at 20Hz (2 Hz!!);
-    cfg.demean='yes';
-    cfg.baselinewindow = [-0.005 0.005]; % Khalighnejad/Haggard's baseline
-    DATA_bl= ft_preprocessing(cfg,DATA_REJ_INTERP);
-    
-    clear avg;
-    
-        avg=[]; across_stdev=[];
-        for condi = 1:length(un_conds)
-            
-            cfg=[];
-            cfg.trials= find(newcond == un_conds(condi));
-            avg{condi} = ft_timelockanalysis(cfg,DATA_bl);
-            across_stdev{condi} = avg{condi}; % we rename it to avoid confusion
-            across_stdev{condi}.avg = sqrt(across_stdev{condi}.var); % we call it avg but it's std
- 
-        end
+% filename= [sprintf('subj%02d_usefulinfo', subi)]; % add one if all trials mixed by condition
+% save(filename,'newcond','-v7.3');
+% disp(['Subject ' num2str(subi) ' done']);
+% 
+% end
 
-disp('END timelock VARIABILITY');     
+cd([results_Path, '/Timeseries']);
+%disp('END of TIME-SERIES ANALYSIS by condition per subject');
+disp('END of VARIABILITY ANALYSIS per subject');
 
-%% Visualization variability 
+%% Visualization across trial variability within subject
 
 hold on;
 figure
 cfg=[];
 cfg.layout = 'eeg_64_NM20884N.lay';
 cfg.linewidth = 2;
-ft_multiplotER(cfg,across_stdev{1},across_stdev{2},across_stdev{3},across_stdev{4},across_stdev{5});
+ft_multiplotER(cfg,across_stdev{1},across_stdev{2},across_stdev{3},across_stdev{4},across_stdev{5}); % CORRECT eqch input
 
-%% Within-trial variability (check why it wasn't working for multiple channels)
-
-within_std = [];
-
-    for condi = 1:length(un_conds)
-        
-        good_trls= find(newcond == un_conds(condi));
-
-        for i=1:length(good_trls) % length of goodtrls
-            
-            within_std{condi}{i}(:,:) = movstd(DATA_bl.trial{i}(:,:),25); %50
-            
-        end
-    end
-
-%% Visualization variability 
+%% Visualization within-trial variability 
 % Change the time axis to put seconds instead of samples
-% SR= 500;
-% tAx = [0:2000]./SR - 3;
-% 
-% for condi = 1:length(un_conds)
-%     f3(condi)= figure(condi)
-%     plot(mean(within_std{condi}))
-%     hold on
-% end
-% 
-% for condi = 1:length(un_conds)
-%     
-%     figure(condi)
-% %     plot(mean(within_std{condi}{:}))
-%     plot(mean(within_std{:,condi}{30,:}))
-%     hold on
-% end
+SR= 500;
+tAx = [0:2000]./SR - 3;
 
-
-%% Save variability timeseries
-
-% Create the folder if it doesn't exist already.
-if input('Save TIMELOCKED VARIABILITY results? RISK OF OVERWRITING  (1/0) ... ')
-    
-    timeseries_folder= [results_Path, '/Timeseries'];
-    if ~exist(fullfile(timeseries_folder)); mkdir(fullfile(timeseries_folder)); end;
-    cd(timeseries_folder);
-    
-    filename= [sprintf('subj%02d_RP_std', subjnum)];
-    save(filename, 'DATA_bl', 'across_stdev', 'within_std', 'subjnum');
-    %     save RP_std across_stdev within_std % choose a proper name and do not change it
-    
+for condi = 1:length(un_conds)
+    f3(condi)= figure(condi)
+    plot(mean(within_std{condi}))
+    hold on
 end
 
-disp('SAVED and SOUND');
-% save std_EEG across_stdev within_std 
+for condi = 1:length(un_conds)
+    
+    figure(condi)
+%     plot(mean(within_std{condi}{:}))
+    plot(mean(within_std{:,condi}{30,:}))
+    hold on
+end
+
+%% GRANDAVERAGE 
+nSubjs= 22;
+%~~~ Other
+OKsubjs= [3 6 7 8 10 13 15 17 18 19 20 21]; % done with the 1µV method assessment 
+
+cd(pwd);
+for subi=1:nSubjs;
+    
+    fname_ER= sprintf('subj%02d_ERPbl_cond',subi); % make the input universal
+    pickupER(subi) = load(fname_ER);
+   
+end
+
+% save pickupER_cond pickupER; DON'T SAVE
+
+%% new matrix and plot with Fieldtrip way
+Varmatrix=[];
+
+for subi= 1:nSubjs; 
+ 
+    for k= 1:5
+        Varmatrix{subi,k}= pickupER(subi).across_stdev_cond{k}; % or avg_condTrl or avg_trl or avg_one
+    end
+
+end
+
+save TimeSmatrix Varmatrix;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Grand_ERvar=[]; 
+
+for k= 1:5
+    
+    cfg=[];
+%     cfg.keepindividual= 'yes';
+%     cfg.channel = {'EEG020','EEG021','EEG029','EEG030','EEG031','EEG039','EEG040'};
+    Grand_ERvar{k}= ft_timelockgrandaverage(cfg,Varmatrix{:,k});
+
+end
+
+save Grand_ERvar_Ind Grand_ERvar;
 
 %% %% End (for now)
 disp(['END of the script for subj ' int2str(subjnum)])
