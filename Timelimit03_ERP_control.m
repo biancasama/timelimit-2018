@@ -90,7 +90,7 @@ for subi=1:nSubjs; %nSubjs
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Re-preprocessing data for further analyses
     cfg=[];
-    cfg.trials = contrl_trls;
+    cfg.trials = control_trls;
     cfg.lpfilter= 'yes';
     cfg.lpfreq = 40; % alternatively filter at 20Hz (2 Hz!!);
     cfg.demean='yes';
@@ -120,7 +120,6 @@ for subi=1:nSubjs; %nSubjs
     avg_trl=[];
    
     cfg=[];
-    cfg.trials= find(newcond == un_conds(condi));
     cfg.keeptrials  = 'yes';
     avg_trl = ft_timelockanalysis(cfg,DATA_CLEAN);
     
