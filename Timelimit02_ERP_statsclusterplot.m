@@ -1,0 +1,123 @@
+%% Find and plot significant clusters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%=========================================================================%
+% AUTHOR: Bianca Trovo (bianca.trovo@alumni.unitn.it)
+% DATE: created on June 2019; modified on july 2019.
+% EXPERIMENT: Timelimit_2018
+
+%{
+
+    SCOPE: 
+
+    OUTPUT: 
+    FIXME: 
+
+%}
+%=========================================================================%
+%% START of the script 
+
+%% Housekeeping
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% clear workspace (if needed)
+if input('clear all?  (1/0) ... ')
+    clearvars; close all;
+end
+
+% set paths (if needed)
+BT_setpath
+
+% choose subj & go to the right folder
+BT_getsubj
+
+clear LevelAnalysis name numlines prompt subj_folders 
+
+%% More specific paths (maybe set this in the start script)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+behavioral_folder= [results_Path, '/Behaviour']; % it can be also current_subj_folder
+if ~exist(fullfile(behavioral_folder)); mkdir(fullfile(behavioral_folder)); end;
+
+timeseries_folder= [results_Path, '/Timeseries']; % it can be also current_subj_folder
+if ~exist(fullfile(timeseries_folder)); mkdir(fullfile(timeseries_folder)); end;
+cd(timeseries_folder);
+
+powerspectra_folder= [results_Path, '/Powerspect']; % it can be also current_subj_folder
+    if ~exist(fullfile(powerspectra_folder)); mkdir(fullfile(powerspectra_folder)); end;
+    cd(powerspectra_folder);
+    
+correlation_folder= [results_Path, '/Correlations']; % it can be also current_subj_folder
+    if ~exist(fullfile(correlation_folder)); mkdir(fullfile(correlation_folder)); end;  
+    
+regression_folder= [results_Path, '/Regressions']; % it can be also current_subj_folder
+    if ~exist(fullfile(regression_folder)); mkdir(fullfile(regression_folder)); end;
+    
+statistics_folder= [results_Path, '/Statistics']; % it can be also current_subj_folder
+    if ~exist(fullfile(statistics_folder)); mkdir(fullfile(statistics_folder)); end;
+    
+%% load stats
+
+cd(statistics_folder);
+load 
+
+%% Find significant time-points
+
+ntimes = size(stat.posclusterslabelmat,2)
+sig_times = zeros(1, ntimes);
+%
+%Cz= 30;
+%ROI = [20 21 29 30 31 39 40];
+
+for j= 1: ntimes
+    
+   if sum(stat.posclusterslabelmat(28,j)==1)>0 % choose channel here / put 2 if another significant cluster
+    sig_times(j) =1;
+   end
+    
+end
+
+effect= stat.time(sig_times==1)
+
+save effect1_corrER1_nr_22 effect; save effect1_regrER1_nr_22 effect; 
+save effect_corrER2_nr_12 effect; save effect1_regrER2_nr_12 effect;
+
+%% topoplot with the Fieldtrip way 
+
+figure;
+cfg= [];
+cfg.layout= 'eeg_64_NM20884N.lay';
+cfg.xlim= [effect(1) effect(end)];
+cfg.parameter= 'stat';
+ft_topoplotER(cfg,stat);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% singleplotER, the Fieldtrip way, with a mask
+
+% POSITIVE CLUSTERS
+stat.stat2= stat.stat.*(stat.posclusterslabelmat == 1);
+cfg_fig= [];
+cfg_fig.parameter= 'stat2';
+cfg_fig.zlim= 'maxabs';
+figure; ft_singleplotER(cfg_fig,stat);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% NEGATIVE CLUSTERS
+% stat.stat_neg= stat.stat.*(stat.negclusterslabelmat == 1);
+% cfg= [];
+% cfg.parameter= 'stat3';
+% cfg.zlim= 'maxabs';
+% figure; ft_singleplotER(cfg,stat);
+
+%% clusterplot 
+
+cfg = [];
+% cfg.alpha  = 0.05;
+% cfg.parameter = 'raweffect';
+% cfg.zlim   = [-1e-27 1e-27];
+cfg.layout = 'eeg_64_NM20884N.lay';
+% cfg.saveaspng= 'clusterplot4';  
+ft_clusterplot(cfg,stat);  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% END
