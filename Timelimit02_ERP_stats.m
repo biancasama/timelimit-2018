@@ -199,14 +199,14 @@ R= zeros(nChans,nTimes); P= zeros(nChans,nTimes);
 
     % Y= Time-locked amplitudes (alias RP avg)
     cd(timeseries_folder);
-    load('pickup_LogER');
+    load('pickupER');
 
-%     for subi=1:nSubjs;
-% 
-%         fname_ER= sprintf('subj%02d_TimeS_bytrial',subi);
-%         pickupER(subi) = load(fname_ER);
-% 
-%     end    
+    for subi=1:nSubjs;
+
+        fname_ER= sprintf('subj%02d_TimeS_bytrial',subi);
+        pickupER(subi) = load(fname_ER);
+
+    end    
 %     save('pickupER','pickupER','-v7.3'); % For variables larger than 2GB use MAT-file version 7.3 or later. 
 
 
@@ -226,8 +226,10 @@ R= zeros(nChans,nTimes); P= zeros(nChans,nTimes);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Compute correlations here:
-
-cd(correlation_folder);
+correlation_folder2= [correlation_folder, '/CorrelationsContr']; % it can be also current_subj_folder
+    if ~exist(fullfile(correlation_folder2)); mkdir(fullfile(correlation_folder2)); end;  
+    
+cd(correlation_folder2);
 
         for subi=1:nSubjs;
 
@@ -259,7 +261,7 @@ cd(correlation_folder);
             end
 
             
-            filename= [sprintf('subj%02d_Corr_ER1Log_semiLogX', subi)]; % add one if all trials mixed by condition
+            filename= [sprintf('subj%02d_CONTRcorr_ER1Log_semiLogX', subi)]; % add one if all trials mixed by condition
             save(filename,'R','P','-v7.3');
 
 %             profile off;
@@ -276,16 +278,18 @@ cd(correlation_folder);
 
             cd(timeseries_folder);
             
+            cd(contrTS_folder);
+            
             load subj22_TimeS_one; % all conditions in one, trials averaged
             templateER= avg_one; % fake Fieldtrip structure for inserting correlation values
             
             % make a matrix with all the subjects
-            cd(correlation_folder);
+            cd(correlation_folder2);
 
             R_all= {};
             for subi=1:nSubjs;
                 
-                fname_Corr= sprintf('subj%02d_Corr_ER1Log_semiLogX',subi);
+                fname_Corr= sprintf('subj%02d_CONTRcorr_ER1Log_semiLogX',subi);
                 pickupCorrs(subi) = load(fname_Corr);
                 
                 templateER.avg = squeeze(pickupCorrs(subi).R); %squeeze to collapse trials dimension
@@ -294,8 +298,8 @@ cd(correlation_folder);
             end
             
 
-            cd(correlation_folder);
-            save('R_all_ER1Log_semiLogX', 'R_all','templateER','-v7.3');
+            cd(correlation_folder2);
+            save('R_all_ER1Contr_semiLogX', 'R_all','templateER','-v7.3');
 
 
             GAVG_R= ft_timelockgrandaverage([], R_all{:});
@@ -313,121 +317,121 @@ cd(correlation_folder);
             
 %% 2a) CORRELATION between RP amplitudes (Y) vs response times (X)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Set parameters and right path:
-
-nChans= 60;
-nTimes= 2001; % corresponds to [-3 +1]s
-R= zeros(nChans,nTimes); P= zeros(nChans,nTimes);
-
-clear data_Path; %set right path
-data_Path= timeseries_folder; % need to fix it in the start up script
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Load in useful data:
-
-    % Y= Time-locked amplitudes (alias RP avg)
-    cd(timeseries_folder);
-    for subi=1:nSubjs;
-
-        fname_ER= sprintf('subj%02d_TimeS_bytrial',subi);
-        pickupER(subi) = load(fname_ER);
-
-    end
-    
-    % X= Response times (alias Waiting Times)
-    cd(behavioral_folder);
-    for subi=1:nSubjs;
-
-        fname_BehavData= sprintf('subj%02d_WaitingTimes',subi);
-        pickupBehav(subi) = load(fname_BehavData);
-
-    end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Compute correlation here:
-
-cd(regression_folder);
-
-        for subi=1:nSubjs;
-
-            X= [pickupBehav(subi).RESPTIMES' ones(length(pickupBehav(subi).RESPTIMES'),1)];
-            Y= pickupER(subi).avg_trl.trial; %.avg or .trial?
-            if isequal(length(Y(:,1)),length(X(:,1)))==1; disp('X & Y have correct dimensions'); else disp('X & Y DO NOT have compatible dimensions'); end;
-
-            profile on
-
-            R(:)= 0; P(:)=0;
-
-            for i=1:nChans
-
-                    for j= 1:nTimes
-
-                       % [B(:,i,k,j),BINT,R] = regress(Y(:,i,k,j),X);
-                       [tmpR,tmpP] = corrcoef(Y(:,i,j),X(:,1));
-                       R(i,j) = tmpR(1,2); P(i,j) = tmpP(1,2);
-
-                    end
-
-
-                disp(['We are at channel' num2str(i)]);
-
-            end
-
-
-            filename= [sprintf('subj%02d_Corr_ER2', subi)]; % add one if all trials mixed by condition
-            save(filename,'R','P','-v7.3');
-
-            profile off;
-            profile viewer;
-            disp(['Subject ' num2str(subi) ' done']);
-
-        end
-
-        
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                   
-% Compute Grandaverages of correlations here:
-
-            cd(data_Path);
-            
-            load subj22_TimeS_one; % all conditions in one, trials averaged
-            templateER= avg_one; % fake Fieldtrip structure for inserting correlation values
-            
-            % make a matrix with all the subjects
-            cd(regression_folder);
-
-            R_all= {};
-            for subi=1:nSubjs;
-
-                fname_Corr= sprintf('subj%02d_Corr_ER2',subi);
-                pickupCorrs(subi) = load(fname_Corr);
-
-                templateER.avg = squeeze(pickupCorrs(subi).R); %squeeze to collapse trials dimension
-                R_all{subi}= templateER;
-
-            end
-            
-            
-            cd(regression_folder);
-            save('R_all_ER2', 'R_all','templateER');
-
-
-            GAVG_R= ft_timelockgrandaverage([], R_all{:});
-            
-% Plot correlations:
-
-            cfg=[];
-            % cfg.preproc.lpfilter='yes';
-            % cfg.preproc.lpfreq= 2; % Filter away alpha frequencies (8-12Hz): put 7 or 1 hz.
-            cfg.layout = 'eeg_64_NM20884N.lay';
-            cfg.linewidth = 1.5;
-            cfg.showlabels= 'yes';
-            figure
-            ft_multiplotER(cfg,GAVG_R);
+% 
+% % Set parameters and right path:
+% 
+% nChans= 60;
+% nTimes= 2001; % corresponds to [-3 +1]s
+% R= zeros(nChans,nTimes); P= zeros(nChans,nTimes);
+% 
+% clear data_Path; %set right path
+% data_Path= timeseries_folder; % need to fix it in the start up script
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % Load in useful data:
+% 
+%     % Y= Time-locked amplitudes (alias RP avg)
+%     cd(timeseries_folder);
+%     for subi=1:nSubjs;
+% 
+%         fname_ER= sprintf('subj%02d_TimeS_bytrial',subi);
+%         pickupER(subi) = load(fname_ER);
+% 
+%     end
+%     
+%     % X= Response times (alias Waiting Times)
+%     cd(behavioral_folder);
+%     for subi=1:nSubjs;
+% 
+%         fname_BehavData= sprintf('subj%02d_WaitingTimes',subi);
+%         pickupBehav(subi) = load(fname_BehavData);
+% 
+%     end
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% % Compute correlation here:
+% 
+% cd(correlation_folder2);
+% 
+%         for subi=1:nSubjs;
+% 
+%             X= [pickupBehav(subi).RESPTIMES' ones(length(pickupBehav(subi).RESPTIMES'),1)];
+%             Y= pickupER(subi).avg_trl.trial; %.avg or .trial?
+%             if isequal(length(Y(:,1)),length(X(:,1)))==1; disp('X & Y have correct dimensions'); else disp('X & Y DO NOT have compatible dimensions'); end;
+% 
+%             profile on
+% 
+%             R(:)= 0; P(:)=0;
+% 
+%             for i=1:nChans
+% 
+%                     for j= 1:nTimes
+% 
+%                        % [B(:,i,k,j),BINT,R] = regress(Y(:,i,k,j),X);
+%                        [tmpR,tmpP] = corrcoef(Y(:,i,j),X(:,1));
+%                        R(i,j) = tmpR(1,2); P(i,j) = tmpP(1,2);
+% 
+%                     end
+% 
+% 
+%                 disp(['We are at channel' num2str(i)]);
+% 
+%             end
+% 
+% 
+%             filename= [sprintf('subj%02d_Corr_ER2', subi)]; % add one if all trials mixed by condition
+%             save(filename,'R','P','-v7.3');
+% 
+%             profile off;
+%             profile viewer;
+%             disp(['Subject ' num2str(subi) ' done']);
+% 
+%         end
+% 
+%         
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                    
+% % Compute Grandaverages of correlations here:
+% 
+%             cd(data_Path);
+%             
+%             load subj22_TimeS_one; % all conditions in one, trials averaged
+%             templateER= avg_one; % fake Fieldtrip structure for inserting correlation values
+%             
+%             % make a matrix with all the subjects
+%             cd(regression_folder);
+% 
+%             R_all= {};
+%             for subi=1:nSubjs;
+% 
+%                 fname_Corr= sprintf('subj%02d_Corr_ER2',subi);
+%                 pickupCorrs(subi) = load(fname_Corr);
+% 
+%                 templateER.avg = squeeze(pickupCorrs(subi).R); %squeeze to collapse trials dimension
+%                 R_all{subi}= templateER;
+% 
+%             end
+%             
+%             
+%             cd(regression_folder);
+%             save('R_all_ER2', 'R_all','templateER');
+% 
+% 
+%             GAVG_R= ft_timelockgrandaverage([], R_all{:});
+%             
+% % Plot correlations:
+% 
+%             cfg=[];
+%             % cfg.preproc.lpfilter='yes';
+%             % cfg.preproc.lpfreq= 2; % Filter away alpha frequencies (8-12Hz): put 7 or 1 hz.
+%             cfg.layout = 'eeg_64_NM20884N.lay';
+%             cfg.linewidth = 1.5;
+%             cfg.showlabels= 'yes';
+%             figure
+%             ft_multiplotER(cfg,GAVG_R);
 
 %% 2b) CORRELATION between RP amplitudes (Y) vs log-transformed response times (X)
 
@@ -446,7 +450,7 @@ R= zeros(nChans,nTimes); P= zeros(nChans,nTimes);
 
     % Y= Time-locked amplitudes (alias RP avg)
     cd(timeseries_folder);
-    load('pickup_LogER');
+%     load('pickup_LogER');
 
 %     for subi=1:nSubjs;
 % 
@@ -473,7 +477,7 @@ R= zeros(nChans,nTimes); P= zeros(nChans,nTimes);
 
 % Compute correlations here:
 
-cd(correlation_folder);
+cd(correlation_folder2);
 
         for subi=1:nSubjs;
 
@@ -500,7 +504,7 @@ cd(correlation_folder);
             end
 
             
-            filename= [sprintf('subj%02d_Corr_ER2Log_semiLogX', subi)]; % add one if all trials mixed by condition
+            filename= [sprintf('subj%02d_Corr_ER2Contr_semiLogX', subi)]; % add one if all trials mixed by condition
             save(filename,'R','P','-v7.3');
 
 %             profile off;
@@ -517,16 +521,18 @@ cd(correlation_folder);
 
             cd(timeseries_folder);
             
+            cd(contrTS_folder);
+            
             load subj22_TimeS_one; % all conditions in one, trials averaged
             templateER= avg_one; % fake Fieldtrip structure for inserting correlation values
             
             % make a matrix with all the subjects
-            cd(correlation_folder);
+            cd(correlation_folder2);
 
             R_all= {};
             for subi=1:nSubjs;
                 
-                fname_Corr= sprintf('subj%02d_Corr_ER2Log_semiLogX',subi);
+                fname_Corr= sprintf('subj%02d_Corr_ER2Contr_semiLogX',subi);
                 pickupCorrs(subi) = load(fname_Corr);
                 
                 templateER.avg = squeeze(pickupCorrs(subi).R); %squeeze to collapse trials dimension
@@ -535,8 +541,8 @@ cd(correlation_folder);
             end
             
 
-            cd(correlation_folder);
-            save('R_all_ER2Log_semiLogX', 'R_all','templateER','-v7.3');
+            cd(correlation_folder2);
+            save('R_all_ER2Contr_semiLogX', 'R_all','templateER','-v7.3');
 
 
             GAVG_R= ft_timelockgrandaverage([], R_all{:});
