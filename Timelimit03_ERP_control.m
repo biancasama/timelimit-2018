@@ -85,12 +85,13 @@ for subi=1:nSubjs; %nSubjs
     idx_cond2keep = find(newcond > 2);
     contrl_cond= newcond(idx_cond2keep);
     un_conds2 = unique(contrl_cond);
-    contrl_trls = idx_cond2keep; % NOT SURE ABOUT THIS PASSAGE
+    % contrl_trls = idx_cond2keep; % NOT SURE ABOUT THIS PASSAGE
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Re-preprocessing data for further analyses
     cfg=[];
-    cfg.trials = control_trls;
+    %cfg.trials =  good_trls; 
+    cfg.trials =  idx_cond2keep;
     cfg.lpfilter= 'yes';
     cfg.lpfreq = 40; % alternatively filter at 20Hz (2 Hz!!);
     cfg.demean='yes';
@@ -105,47 +106,47 @@ for subi=1:nSubjs; %nSubjs
     
     avg_cond=[];
     
-    for condi = 2:length(un_conds)
+    for condi = 1:length(un_conds2)
         
         cfg=[];
-        cfg.trials= find(newcond == un_conds(condi));
+        cfg.trials= find(contrl_cond == un_conds2(condi));
         avg_cond{condi} = ft_timelockanalysis(cfg,DATA_CLEAN);
         
     end
-    
+%     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     % avg_trl
     
-    avg_trl=[];
-   
-    cfg=[];
-    cfg.keeptrials  = 'yes';
-    avg_trl = ft_timelockanalysis(cfg,DATA_CLEAN);
+%     avg_trl=[];
+%    
+%     cfg=[];
+%     cfg.keeptrials  = 'yes';
+%     avg_trl = ft_timelockanalysis(cfg,DATA_CLEAN);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
     % avg_one : you will need it for the template for the cluster test
     
-    avg_one=[];
-    
-    cfg=[];
-    avg_one = ft_timelockanalysis(cfg,DATA_CLEAN);
+%     avg_one=[];
+%     
+%     cfg=[];
+%     avg_one = ft_timelockanalysis(cfg,DATA_CLEAN);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     % avg_condTrl : you will need it for the fancy plot
     
-    avg_condTrl=[];
-    
-    for condi = 1:length(un_conds)
-        
-        cfg=[];
-        cfg.trials= find(newcond == un_conds(condi));
-        cfg.keeptrials  = 'yes';
-        avg_condTrl{condi} = ft_timelockanalysis(cfg,DATA_CLEAN);
-        
-    end
+%     avg_condTrl=[];
+%     
+%     for condi = 1:length(un_conds2)
+%         
+%         cfg=[];
+%         cfg.trials= find(contrl_cond == un_conds2(condi));
+%         cfg.keeptrials  = 'yes';
+%         avg_condTrl{condi} = ft_timelockanalysis(cfg,DATA_CLEAN);
+%         
+%     end
      
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -159,19 +160,23 @@ for subi=1:nSubjs; %nSubjs
     if ~exist(fullfile(timeseries_folder)); mkdir(fullfile(timeseries_folder)); end;
     cd(timeseries_folder);
     
-    % avg_cond
-    filename= [sprintf('subj%02d_TimeS_bytrial', subi)]; % add one if all trials mixed by condition
-    save(filename,'avg_cond','-v7.3');
-    % avg_trl
-    filename= [sprintf('subj%02d_TimeS_bytrial', subi)]; % add one if all trials mixed by condition
-    save(filename,'avg_trl','-v7.3');
-    % avg_one
-    filename= [sprintf('subj%02d_TimeS_bytrial', subi)]; % add one if all trials mixed by condition
-    save(filename,'avg_one','-v7.3');
-    % avg_condTrl
-    filename= [sprintf('subj%02d_TimeS_bytrial', subi)]; % add one if all trials mixed by condition
-    save(filename,'avg_condTrl','-v7.3');
+    contrTS_folder= [timeseries_folder, '/ControlTS']; % it can be also current_subj_folder
+    if ~exist(fullfile(contrTS_folder)); mkdir(fullfile(contrTS_folder)); end;
+    cd(contrTS_folder);
     
+    % avg_cond
+    filename= [sprintf('subj%02d_TimeS_cond', subi)]; % add one if all trials mixed by condition
+    save(filename,'avg_cond','idx_cond2keep','contrl_cond','newcond','good_trls','-v7.3');
+    % avg_trl
+%     filename= [sprintf('subj%02d_TimeS_bytrial', subi)]; % add one if all trials mixed by condition
+%     save(filename,'avg_trl', 'idx_cond2keep','contrl_cond','newcond','good_trls','-v7.3');
+    % avg_one
+%     filename= [sprintf('subj%02d_TimeS_one', subi)]; % add one if all trials mixed by condition
+%     save(filename,'avg_one','idx_cond2keep','contrl_cond','newcond','good_trls','-v7.3');
+    % avg_condTrl
+%     filename= [sprintf('subj%02d_TimeS_condTrl', subi)]; % add one if all trials mixed by condition
+%     save(filename,'avg_condTrl','idx_cond2keep','contrl_cond','newcond','good_trls','-v7.3');
+%     
     disp(['Subject ' num2str(subi) ' done']);
 
 end % of the whole loop across nSubjs
@@ -194,7 +199,7 @@ OKsubjs= [3 6 7 8 10 13 15 17 18 19 20 21]; % done with the 1µV method assessme
 cd(pwd);
 for subi=1:nSubjs;
     
-    fname_ER= sprintf('subj%02d_TimeS_one',subi);
+    fname_ER= sprintf('subj%02d_TimeS_bytrial',subi);
     pickupER(subi) = load(fname_ER);
    
 end
