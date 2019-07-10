@@ -748,7 +748,10 @@ nTimes= 2001; % corresponds to [-3 +1]s
 
 % Compute regressions here:
 
-cd(regression_folder);
+regression_folder2= [regression_folder, '/RegressionsContr']; % it can be also current_subj_folder
+    if ~exist(fullfile(regression_folder2)); mkdir(fullfile(regression_folder2)); end;
+    
+cd(regression_folder2);
 
         for subi=1:nSubjs;
             
@@ -782,7 +785,7 @@ cd(regression_folder);
             end
 
             
-            filename= [sprintf('subj%02d_Regr_ER1Log_semiLogX', subi)]; % add one if all trials mixed by condition CHANGE TO Log
+            filename= [sprintf('subj%02d_Regr_ER1Contr_semiLogX', subi)]; % add one if all trials mixed by condition CHANGE TO Log
             save(filename,'B','R','stats','-v7.3');
 
 %             profile off;
@@ -798,17 +801,18 @@ cd(regression_folder);
 % Compute Grandaverages of regressions here:
 
             cd(timeseries_folder);
+            cd(contrTS_folder);
             
             load subj22_TimeS_one; % all conditions in one, trials averaged
             templateER= avg_one; % fake Fieldtrip structure for inserting correlation values
             
             % make a matrix with all the subjects
-            cd(regression_folder);
+            cd(regression_folder2);
 
             B_all= {};
             for subi=1:nSubjs;
                 
-                fname_Regr= sprintf('subj%02d_Regr_ER1Log_semiLogX',subi);
+                fname_Regr= sprintf('subj%02d_Regr_ER1Contr_semiLogX',subi);
                 pickupRegr(subi) = load(fname_Regr);
                 
                 templateER.avg = squeeze(pickupRegr(subi).B(1,:,:)); %squeeze to collapse trials dimension
@@ -829,8 +833,8 @@ cd(regression_folder);
             
 
 
-            cd(regression_folder);
-            save('B_all_ER1Log_semiLogX', 'B_all','templateER','-v7.3');
+            cd(regression_folder2);
+            save('B_all_ER1Contr_semiLogX', 'B_all','templateER','-v7.3');
 
 
             GAVG_B= ft_timelockgrandaverage([], B_all{:});
@@ -995,9 +999,9 @@ nTimes= 2001; % corresponds to [-3 +1]s
 % Load in useful data:
 
     % Y= Time-locked amplitudes (alias RP avg)
-    cd(timeseries_folder);
-    load('pickupER');
-    
+    cd(timeseries_folder);load('pickupER');
+    cd(timeseries_folder2);load('pickupERContr');
+%     
 %     for subi=1:nSubjs;
 % 
 %         fname_ER= sprintf('subj%02d_TimeS_bytrial',subi);
@@ -1006,9 +1010,9 @@ nTimes= 2001; % corresponds to [-3 +1]s
 %     end
     
     % X= Response times (alias Waiting Times)
-    cd(behavioral_folder);
-    load('pickupBehav');
-    
+    cd(behavioral_folder); load('pickupBehav');
+    cd(behavioral_folder2); load('pickupBehavContr');
+%     
 %     for subi=1:nSubjs;
 % 
 %         fname_BehavData= sprintf('subj%02d_WaitingTimes',subi);
@@ -1020,8 +1024,10 @@ nTimes= 2001; % corresponds to [-3 +1]s
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Compute regressions here:
-
-cd(regression_folder);
+regression_folder2= [regression_folder, '/RegressionsContr']; % it can be also current_subj_folder
+    if ~exist(fullfile(regression_folder2)); mkdir(fullfile(regression_folder2)); end;
+    
+cd(regression_folder2);
 
         for subi=1:nSubjs;
 
@@ -1047,7 +1053,7 @@ cd(regression_folder);
             end
 
 
-            filename= [sprintf('subj%02d_Regr_ER2Log_semiLogX', subi)]; % add one if all trials mixed by condition
+            filename= [sprintf('subj%02d_Regr_ER2Contr_semiLogX', subi)]; % add one if all trials mixed by condition
             save(filename,'B','R','stats','-v7.3');
             
 %             profile off;
@@ -1062,18 +1068,18 @@ cd(regression_folder);
                    
 % Compute Grandaverages of regressions here:
 
-            cd(timeseries_folder);
+            cd(timeseries_folder); cd(ControlTS);
             
             load subj22_TimeS_one; % all conditions in one, trials averaged
             templateER= avg_one; % fake Fieldtrip structure for inserting correlation values
             
             % make a matrix with all the subjects
-            cd(regression_folder);
+            cd(regression_folder2);
 
             B_all= {};
             for subi=1:nSubjs;
 
-                fname_Regr= sprintf('subj%02d_Regr_ER2Log_semiLogX',subi);
+                fname_Regr= sprintf('subj%02d_Regr_ER2Contr_semiLogX',subi);
                 pickupRegr(subi) = load(fname_Regr);
 
                 templateER.avg = squeeze(pickupRegr(subi).B(1,:,:)); %squeeze to collapse trials dimension
@@ -1082,8 +1088,8 @@ cd(regression_folder);
             end
             
             
-            cd(regression_folder);
-            save('B_all_ER2Log_semiLogX', 'B_all','templateER');
+            cd(regression_folder2);
+            save('B_all_ER2Contr_semiLogX', 'B_all','templateER');
 
 
             GAVG_B= ft_timelockgrandaverage([], B_all{:});

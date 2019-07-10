@@ -51,8 +51,17 @@ correlation_folder= [results_Path, '/Correlations']; % it can be also current_su
 regression_folder= [results_Path, '/Regressions']; % it can be also current_subj_folder
     if ~exist(fullfile(regression_folder)); mkdir(fullfile(regression_folder)); end;
     
+regression_folder2= [regression_folder, '/RegressionsContr']; % it can be also current_subj_folder
+    if ~exist(fullfile(regression_folder2)); mkdir(fullfile(regression_folder2)); end;
+    
 statistics_folder= [results_Path, '/Statistics']; % it can be also current_subj_folder
     if ~exist(fullfile(statistics_folder)); mkdir(fullfile(statistics_folder)); end;
+    
+alpha_folder= [statistics_folder, '/alpha']; % it can be also current_subj_folder
+    if ~exist(fullfile(alpha_folder)); mkdir(fullfile(alpha_folder)); end;
+    
+prob_folder= [statistics_folder, '/prob']; % it can be also current_subj_folder
+    if ~exist(fullfile(prob_folder)); mkdir(fullfile(prob_folder)); end;
 
 %% 1) Time-series CORRELATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -61,7 +70,7 @@ statistics_folder= [results_Path, '/Statistics']; % it can be also current_subj_
 % load 'R_all_ER1'; load 'R_all_ER2'; 
 % load 'R_all_ER1Log'; load 'R_all_ER2Log';
 load 'R_all_ER1Log_semiLogX'; load 'R_all_ER2Log_semiLogX'; % correggi
-load 'R_all_ER1Contr_semiLogX'; load 'R_all_ER2Contr_semiLogX'; % correggi
+load 'R_all_ER1Contr_semiLogX'; load 'R_all_ER2Contr_semiLogX'; 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -147,59 +156,10 @@ isequal(R_all{13},R_some{6}); % IT WORKS but you should automatize it
                 
 %% 2) Time-series: REGRESSIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Load in useful datachans= {'EEG*'};
-                latency= [-2  -0.2]; %-200ms = point of no return;
-                nSubjs = 22;
-                % Prepare the 'design'. Since Fieldrip does not know the the simple t-test
-                % against 0, we have to use the paired t-test (against 0).
-                design = zeros(2, 2*nSubjs);
-                design(1, 1:nSubjs)= 1;               % condition 1 (data)
-                design(1, (nSubjs+1):(2*nSubjs))= 2;        % condition 2 (0, value against which we compare the data).
-                design(2, 1:nSubjs) = 1:nSubjs;          % Indicate the subject number (for pairing, alghough not useful here)
-                design(2, (nSubjs+1):(2*nSubjs)) = 1:nSubjs;
-
-                % Make *fake data*
-                R_contr= {};
-                for subi=1:nSubjs;
-
-                    templateER.avg = R_all{subi}.avg; % some or all
-                    R_contr{subi}= templateER;
-                    R_contr{subi}.avg= zeros(nChans,nTimes);
-                end
-
-                cfg = [];
-                cfg.method = 'montecarlo';
-                cfg.channel = chans;
-                cfg.latency= latency;
-                cfg.avgoverchan = 'yes';
-                % cfg.avgovertime= 'yes';
-                cfg.correctm = 'cluster';
-                cfg.clusteralpha = 0.05; % lower to 0.01
-                cfg.correcttail = 'alpha'; %only for two sided t-tests
-                cfg.statistic = 'ft_statfun_depsamplesT';
-                % cfg.statistic = 'ft_statfun_indepsamplesF'; % if you want
-                % to run the ANOVA
-                cfg.design = design;
-                cfg.ivar = 1;
-                cfg.uvar = 2;
-                cfg.numrandomization = 500; % to try put 500 and final put 1000
-
-                % elie's way
-                cfg_neighb=[];
-                % cfg_neighb.layout = '/Users/bt_neurospin/Repos/matlab_internal/turbo_mne/eeg_64_NM20884N.lay';
-                cfg_neighb.layout= 'eeg_64_NM20884N.lay';
-                cfg_neighb.method = 'distance';
-                cfg_neighb.neighbourdist = .18;
-                cfg_neighb.sens= R_all{2}.elec;
-                neighbs = ft_prepare_neighbours(cfg_neighb);
-                cfg.neighbours = neighbs;
-
-                % STATS  
-                stat = ft_timelockstatistics(cfg, R_all{:}, R_contr{:});
+cd(regression_folder2);
 % load 'B_all_ER1'; load 'B_all_ER2'; 
 % load 'B_all_ER1Log'; load 'B_all_ER2Log';
-load 'B_all_ER1Log_semiLogX'; load 'B_all_ER2Log_semiLogX';
+load 'B_all_ER1Contr_semiLogX'; load 'B_all_ER2Contr_semiLogX';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -207,6 +167,7 @@ nChans= 60;
 nTimes= 2001; % corresponds to [-3 +1]s
 
 RPsubjs= [3  6  7  8  10  13  15  17  18  19   20   21];
+Timesubjs= [];
 nSubjs= length(RPsubjs);
 B_all=B_all';
 
@@ -254,7 +215,8 @@ isequal(B_all{13},B_some{6}); % IT WORKS but you should automatize it
                 % cfg.avgovertime= 'yes';
                 cfg.correctm = 'cluster';
                 cfg.clusteralpha = 0.01; % 0.05 or 0.01
-                cfg.correcttail = 'alpha'; %only for two sided t-tests
+%                 cfg.alpha = 0.01;
+                cfg.correcttail = 'prob'; % IMPORTANT: if you set alpha you should multiply your stat.prob x 2 
                 cfg.statistic = 'ft_statfun_depsamplesT';
                 % cfg.statistic = 'ft_statfun_indepsamplesF'; % if you want
                 % to run the ANOVA
@@ -268,7 +230,7 @@ isequal(B_all{13},B_some{6}); % IT WORKS but you should automatize it
                 % cfg_neighb.layout = '/Users/bt_neurospin/Repos/matlab_internal/turbo_mne/eeg_64_NM20884N.lay';
                 cfg_neighb.layout= 'eeg_64_NM20884N.lay';
                 cfg_neighb.method = 'distance';
-                cfg_neighb.neighbourdist = .18;%.18 %.13
+                cfg_neighb.neighbourdist = .13;%.18 %.13
                 cfg_neighb.sens= B_all{2}.elec;
                 neighbs = ft_prepare_neighbours(cfg_neighb);
                 cfg.neighbours = neighbs;
@@ -276,12 +238,13 @@ isequal(B_all{13},B_some{6}); % IT WORKS but you should automatize it
                 % STATS  
                 stat = ft_timelockstatistics(cfg, B_all{:}, B_contr{:}); %R_all
 
-                cd(statistics_folder);
-                save('stat_regr_ER2semiLog_nr_22','-v7.3'); % nr= narrow: All channels, latency= -2s -0.2s
+%                 cd(alpha_folder); 
+                cd(prob_folder);
+                save('stat2_regr_ER1Contr_semiLog_nr_22_sn','stat','-v7.3'); % nr= narrow: All channels, latency= -2s -0.2s
                 save('stat_regr_ER2semiLog_hp_22','-v7.3'); % hp= hypothesis: ROI channels, latency= -2 -0.2s
                
                 % Check if there are significant clusters after correction
-                stat.posclusters; stat.negclusters;
+                stat.posclusters(1); stat.negclusters(1);
                 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
