@@ -216,40 +216,74 @@ B= zeros(nSubjs,1); R= zeros(nSubjs,1); stats= zeros(nSubjs,1);
 cd(timeseries_folder);
 load('pickupER');
 
-nChans= 60;
-nTrls= length(pickupER(subi).avg_trl.trial(:,1)); % you need other lines of code (see below)
+for subi=1:nSubjs;
+    
+    fname_ER= sprintf('subj%02d_TimeS_bytrial',subi);
+    pickupER(subi) = load(fname_ER);
+   
+end
 
+nChans= 60;
+nTrls= length)
+(:,1)); % you need other lines of code (see below)
+
+pickup_minER= [];
 pickup_posER= [];
 pickup_LogER= [];
 
+% Aaron's way
 for subi=1:nSubjs;
     
-    min(pickupER(subi).avg_trl.trial(:));
-    pickup_LogER(subi).avg_trl.trial(:)= [pickupER(subi).avg_trl.trial(:) - ans];
+    pickup_minER(subi)= min(pickupER(subi).avg_trl.trial(:));
+    pickup_minER= pickup_minER';
+    pickup_posER(subi).avg_trl.trial(:)= [pickupER(subi).avg_trl.trial(:) - pickup_minER(subi)];
+%     pickup_LogER(subi).avg_trl.trial(:)= log(pickup_posER(subi).avg_trl.trial(:));
     
 end
 
-% WRONG
+% my way
 
-%     
-%     for k= 1:length(pickupER(subi).avg_trl.trial(:,1))
-%         
-%         for i=1:60
-%             
-%             Min_ER{subi}(k,i)= min(pickupER(subi).avg_trl.trial(k,i,:));
-%             pickup_posER(subi).avg_trl.trial(k,i,:)= pickupER(subi).avg_trl.trial(k,i,:)+ abs(Min_ER{subi}(k,i));
-%             if isequal(length(pickup_posER(subi).avg_trl.trial(k,i,:)),length(pickupER(subi).avg_trl.trial(k,i,:)))==1; disp('X & Y have correct dimensions'); else disp('X & Y DO NOT have compatible dimensions'); end;
-% 
-%             pickup_LogER(subi).avg_trl.trial(k,i,:)= log(pickup_posER(subi).avg_trl.trial(k,i,:));
-%             
-%         end
-%         
-%     end
-% 
+
+for k= 1:length(pickupER(subi).avg_trl.trial(:,1))
+
+    for i=1:60
+
+        Min_ER{subi}(k,i)= min(pickupER(subi).avg_trl.trial(k,i,:));
+        pickup_posER(subi).avg_trl.trial(k,i,:)= pickupER(subi).avg_trl.trial(k,i,:)+ abs(Min_ER{subi}(k,i));
+        if isequal(length(pickup_posER(subi).avg_trl.trial(k,i,:)),length(pickupER(subi).avg_trl.trial(k,i,:)))==1; disp('X & Y have correct dimensions'); else disp('X & Y DO NOT have compatible dimensions'); end;
+
+        pickup_LogER(subi).avg_trl.trial(k,i,:)= log(pickup_posER(subi).avg_trl.trial(k,i,:));
+
+    end
+
+end
+
+% trying new way
+for subi=1:nSubjs;
+    
+    pickup_minER(subi)= min(pickupER(subi).avg_trl.trial(:));
+    pickup_minER= pickup_minER';
+    
+    for k= 1:length(pickupER(subi).avg_trl.trial(:,1))
+        
+        for i=1:60
+            
+            pickup_posER(subi).avg_trl.trial(k,i,:)= pickupER(subi).avg_trl.trial(k,i,:)- pickup_minER(subi);
+            
+            if isequal(length(pickup_posER(subi).avg_trl.trial(k,i,:)),length(pickupER(subi).avg_trl.trial(k,i,:)))==1; disp('X & Y have correct dimensions'); else disp('X & Y DO NOT have compatible dimensions'); end;
+            
+            pickup_LogER(subi).avg_trl.trial(k,i,:)= log(pickup_posER(subi).avg_trl.trial(k,i,:));
+            
+             disp(['Channel' num2str(i) 'done']);
+        end
+       disp(['Trial' num2str(k) 'done']);
+    end
+    disp(['Subject' num2str(subi) 'done']);
+end
 
 
 cd(timeseries_folder);
-save('pickup_LogER', 'pickup_LogER','-v7.3');
+save('pickup_LogERtrl', 'pickup_LogER','-v7.3');
 
 %% 2a) Time-series: CORRELATION between RP amplitudes (Y) vs conditions (X)
 
@@ -634,11 +668,13 @@ cd(regression_folder);
 %             end
             
 
+
             cd(regression_folder);
             save('B_all_ER1Log_semiLogX', 'B_all','templateER','-v7.3');
 
 
-            GAVG_B= ft_timelockgrandaverage([], B_all{1});
+            GAVG_B= ft_timelockgrandaverage([], B_all{:});
+            save('GAVG_B_ER1_semiLogX', 'GAVG_B','-v7.3');
             
 % Plot regressions:
 
@@ -648,8 +684,19 @@ cd(regression_folder);
             cfg.layout = 'eeg_64_NM20884N.lay';
             cfg.linewidth = 1.5;
             cfg.showlabels= 'yes';
+            cfg.comment= 'no'
+            cfg.highlight= 'numbers'; %'numbers' %''labels'
+            %cfg.highlightchannel=  {'EEG030'};
+%             cfg.highlightsymbol= 'x'; %default = 'o')
+%             cfg.highlightcolor= highlight marker color (default = [0 0 0] (black))
+%             cfg.highlightsize= 48;
+            cfg.highlightfontsize= 48;
+            cfg.colorbar= 'yes';
+            cfg.style= 'straight'; %both' or %'fill'
+            cfg.gridscale= 400;
+            cfg.xlim= [-0.714 -0.306];
             figure
-            ft_multiplotER(cfg,GAVG_B);
+            ft_topoplotER(cfg,GAVG_B);
             
 %% 2d) Time-series: REGRESSION between RP amplitudes (Y) vs response times (X)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -758,8 +805,8 @@ cd(regression_folder);
             save('B_all_ER2Log_semiLogX', 'B_all','templateER');
 
 
-            GAVG_R= ft_timelockgrandaverage([], B_all{:});
-            save 'GAVG_R_ER2Log' GAVG_R;
+            GAVG_B= ft_timelockgrandaverage([], B_all{:});
+            save('GAVG_B_ER2_semiLogX', 'GAVG_B','-v7.3');
             
 % Plot regressions:
 
@@ -768,9 +815,20 @@ cd(regression_folder);
             % cfg.preproc.lpfreq= 2; % Filter away alpha frequencies (8-12Hz): put 7 or 1 hz.
             cfg.layout = 'eeg_64_NM20884N.lay';
             cfg.linewidth = 1.5;
+            cfg.commet= 'no';
             cfg.showlabels= 'yes';
+            cfg.highlight= 'numbers'; %'numbers' %''labels'
+            cfg.highlightchannel=  {'EEG030'};
+%             cfg.highlightsymbol= 'x'; %default = 'o')
+%             cfg.highlightcolor= highlight marker color (default = [0 0 0] (black))
+%             cfg.highlightsize= 48;
+            cfg.highlightfontsize= 48;
+            cfg.colorbar= 'yes';
+            cfg.style= 'straight'; %both' or %'fill'
+            cfg.gridscale= 400;
+            cfg.xlim= [-0.742 -0.26];
             figure
-            ft_multiplotER(cfg,GAVG_R);  
+            ft_topoplotER(cfg,GAVG_B);
             
             
 %% PREPARE FOR TIME-FREQUENCY
@@ -1347,12 +1405,12 @@ cd(regression_folder);
             templateTFR= TFR_one; % fake Fieldtrip structure for inserting correlation values
 
             % make a matrix with all the subjects
-            cd(regression_folder);
+            cd(correlation_folder);
 
             R_all= {};
             for subi=1:nSubjs;
 
-                fname_Corr= sprintf('subj%02d_Corr_TFR1',subi);
+                fname_Corr= sprintf('subj%02d_Corr_TFR1_semiLogX',subi);
                 pickupCorrs(subi) = load(fname_Corr);
 
                 templateTFR.powspctrm = squeeze(pickupCorrs(subi).R);
@@ -1362,8 +1420,8 @@ cd(regression_folder);
             end
             
             
-            cd(regression_folder);
-            save('R_all_TFR1', 'R_all','templateTFR');
+            cd(correlation_folder);
+            save('R_all_TFR1_semiLogX', 'R_all','templateTFR');
 
             GAVG_R= ft_freqgrandaverage([], R_all{:});
             
@@ -1428,11 +1486,12 @@ cd(correlation_folder);
         
         for subi=1:nSubjs;
 
-            profile on
+%             profile on
 
              R(:)= 0; P(:)=0;
 
-          X= [pickupBehav(subi).RESPTIMES' ones(length(pickupBehav(subi).RESPTIMES'),1)];
+          X= [pickupBehav(subi).LogRESPS' ones(length(pickupBehav(subi).LogRESPS'),1)];
+          
             Y= pickupTFR(subi).TFR_trl.powspctrm;
             
                 if isequal(length(Y(:,1)),length(X(:,1)))==1; disp('X & Y have correct dimensions'); else disp('X & Y DO NOT have compatible dimensions'); end;
@@ -1452,13 +1511,13 @@ cd(correlation_folder);
 
                 % save stuff
               
-                filename= [sprintf('subj%02d_Corr_TFR2', subi)]; % add one if all trials mixed by condition
+                filename= [sprintf('subj%02d_Corr_TFR2_semiLogX', subi)]; % add one if all trials mixed by condition
                 save(filename,'R','P','-v7.3');
 
                 end
                 
-            profile off;
-            profile viewer;
+%             profile off;
+%             profile viewer;
             disp(['Subject ' num2str(subi) ' done']);
 
         end
@@ -1479,7 +1538,7 @@ cd(correlation_folder);
             R_all= {};
             for subi=1:nSubjs;
 
-                fname_Corr= sprintf('subj%02d_Corr_TFR2',subi);
+                fname_Corr= sprintf('subj%02d_Corr_TFR2_semiLogX',subi);
                 pickupCorrs(subi) = load(fname_Corr);
 
                 templateTFR.powspctrm = squeeze(pickupCorrs(subi).R);
@@ -1490,7 +1549,7 @@ cd(correlation_folder);
             
             
             cd(correlation_folder);
-            save('R_all_TFR2', 'R_all','templateTFR');
+            save('R_all_TFR2_semiLogX', 'R_all','templateTFR');
             
 
             GAVG_R= ft_freqgrandaverage([], R_all{:});
@@ -1737,7 +1796,7 @@ B= zeros(nChans,nFreqs,nTimes); R= zeros(nChans,nFreqs,nTimes); stats= zeros(nCh
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Compute correlation here:
+% Compute regression here:
 
         
 cd(regression_folder);
@@ -1801,7 +1860,7 @@ cd(regression_folder);
             for subi=1:nSubjs;
 
                 fname_regr= sprintf('subj%02d_Regr_TFR1_semiLogX',subi);
-                pickupRegr(subi) = load(fname_Corr);
+                pickupRegr(subi) = load(fname_regr);
 
                 templateTFR.powspctrm = squeeze(pickupRegr(subi).B(1,:,:,:));
                 B_all{subi}= templateTFR;
@@ -1815,7 +1874,7 @@ cd(regression_folder);
 
             GAVG_B= ft_freqgrandaverage([], B_all{:});
             
- %% 3b) Time-frequency: correlation between power-spectra (Y) vs response times (X)
+ %% 3b) Time-frequency: regression between power-spectra (Y) vs response times (X)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Set parameters and right path:
@@ -1854,7 +1913,7 @@ B= zeros(nChans,nFreqs,nTimes); R= zeros(nChans,nFreqs,nTimes); stats= zeros(nCh
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Compute correlation here:
+% Compute regression here:
 
 cd(regression_folder);
         
@@ -1901,7 +1960,7 @@ cd(regression_folder);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                    
-% Compute Grandaverages of correlations here:
+% Compute Grandaverages of regressions here:
 
             cd(data_Path);
 
