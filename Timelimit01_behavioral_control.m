@@ -49,7 +49,6 @@ powerspectra_folder= [results_Path, '/Powerspect']; % it can be also current_sub
 regression_folder= [results_Path, '/Regressions']; % it can be also current_subj_folder
     if ~exist(fullfile(regression_folder)); mkdir(fullfile(regression_folder)); end;
     
-
 %% Load preprocessed files and exclude behavioural artifacts 
 
 for subi=1:nSubjs; %nSubjs
@@ -78,7 +77,7 @@ for subi=1:nSubjs; %nSubjs
     un_conds = unique(cond);
     newcond= cond(good_trls);
     % add control
-    idx_cond2keep = find(newcond > 2);
+    idx_cond2keep = find(newcond < Inf); % either > 2 or < Inf
     contrl_cond= newcond(idx_cond2keep);
     un_conds2 = unique(contrl_cond);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,7 +115,7 @@ for subi=1:nSubjs; %nSubjs
     cd(behavioral_folder);
     
     filename= [sprintf('subj%02d_WaitingTimesContr', subi)]; % add one if all trials mixed by condition
-    save(filename,'RESPTIMES','contr_resps_cond');
+    save(filename,'RESPTIMES','contr_resps_cond','contrl_cond','idx_cond2keep');
     
     disp(['End of subj ' num2str(subi)]);
     
@@ -135,6 +134,15 @@ for subi=1:nSubjs
     %         cd(behavioral_folder2);
     fname_BehavData= sprintf('subj%02d_WaitingTimesContr',subi);
     pickupBehav(subi) = load(fname_BehavData);
+    
+end
+
+% load in an unique structure 
+for subi=1:nSubjs
+    %
+    %         cd(behavioral_folder2);
+    fname_Cond= sprintf('subj%02d_WaitingTimesContr',subi);
+    pickupCond(subi) = load(fname_Cond);
     
 end
 
