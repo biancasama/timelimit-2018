@@ -63,22 +63,70 @@ alpha_folder= [statistics_folder, '/alpha']; % it can be also current_subj_folde
 prob_folder= [statistics_folder, '/prob']; % it can be also current_subj_folder
     if ~exist(fullfile(prob_folder)); mkdir(fullfile(prob_folder)); end;
 
-%% 1) Time-series CORRELATIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Load
 
-% Load in useful data
+% Correlations
+
 % load 'R_all_ER1'; load 'R_all_ER2'; 
 % load 'R_all_ER1Log'; load 'R_all_ER2Log';
 load 'R_all_ER1Log_semiLogX'; load 'R_all_ER2Log_semiLogX'; % correggi
-load 'R_all_ER1Contr_semiLogX'; load 'R_all_ER2Contr_semiLogX'; 
+load 'R_all_ER1Contr_semiLogX'; load 'R_all_ER2Contr_semiLogX';
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Regressions
+cd(regression_folder); cd(regression_folder2);
+% load 'B_all_ER1'; load 'B_all_ER2'; 
+% load 'B_all_ER1Log'; load 'B_all_ER2Log';
+load 'B_all_ER1Log_semiLogX'; load 'B_all_ER2Log_semiLogX';
+
+load 'B_all_ER1Contr_semiLogX'; load 'B_all_ER2Contr_semiLogX';
+
+%% Parameters
+
 nChans= 60;
 nTimes= 2001; % corresponds to [-3 +1]s
 
+Subjs= 1:22;
 RPsubjs= [3  6  7  8  10  13  15  17  18  19   20   21];
-nSubjs= length(RPsubjs);
+BadRPs= Subjs(~ismember(1:numel(Subjs),RPsubjs));
+NonTimers= [1 4 5 8 10 16 22];
+Timers= Subjs(~ismember(1:numel(Subjs),NonTimers));
+
+%% Randomly choose some participants to exclude from analysis to equalize groups in design matrix
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% GoodRP vs Timers
+clear Rand;
+
+Rand = Timers(end,randperm(size(Timers,2), 3));
+excl= sort(Rand);
+Timesubjs= Timers(~ismember(Timers,excl));
+% check
+size(Timesubjs);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Timers vs NonTimers
+clear Rand;
+
+Rand = Timers(end,randperm(size(Timers,2), 8));
+excl= sort(Rand);
+Timesubjs= Timers(~ismember(Timers,excl));
+
+% check
+size(Timesubjs);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% GoodRP vs BadRP
+clear Rand;
+
+Rand = RPsubjs(end,randperm(size(RPsubjs,2), 2));
+excl= sort(Rand);
+RPsubjs= RPsubjs(~ismember(RPsubjs,excl));
+
+% check
+size(RPsubjs);
+
+%% 1) Time-series CORRELATIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%nSubjs= length(RPsubjs);
+
 % R_all=R_all';
 
 R_some= {};
@@ -88,10 +136,14 @@ end
 
 % R_some= R_some';
 
+R_some= {};
+for subi=1:nSubjs;
+    R_some{subi}= R_all{RPsubjs(subi)}
+end
 
 isequal(R_all{13},R_some{6}); % IT WORKS but you should automatize it
 
-% Run cluster test
+%% Run cluster test for CORRELATIONS
 
                 % ROI for RP
 %                 chans = {'EEG20','EEG21','EEG29','EEG30','EEG31','EEG39','EEG40'};
@@ -156,32 +208,57 @@ isequal(R_all{13},R_some{6}); % IT WORKS but you should automatize it
                 
 %% 2) Time-series: REGRESSIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-cd(regression_folder2);
-% load 'B_all_ER1'; load 'B_all_ER2'; 
-% load 'B_all_ER1Log'; load 'B_all_ER2Log';
-load 'B_all_ER1Contr_semiLogX'; load 'B_all_ER2Contr_semiLogX';
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-nChans= 60;
-nTimes= 2001; % corresponds to [-3 +1]s
+%% Subgroups
 
-RPsubjs= [3  6  7  8  10  13  15  17  18  19   20   21];
-Timesubjs= [];
+clear nSubjs;
 nSubjs= length(RPsubjs);
+
 B_all=B_all';
 
-B_some= {};
+B_good= {};
 for subi=1:nSubjs;
-    B_some{subi}= B_all{RPsubjs(subi)}
+    B_good{subi}= B_all{RPsubjs(subi)}
 end
 
-B_some= B_some';
-
+% B_some= B_some';
 
 isequal(B_all{13},B_some{6}); % IT WORKS but you should automatize it
 
-% Run cluster test
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear nSubjs;
+
+nSubjs= length(BadRPs);
+
+B_bad= {};
+for subi=1:nSubjs;
+    B_bad{subi}= B_all{BadRPs(subi)}
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear nSubjs;
+
+nSubjs= length(Timesubjs);
+
+B_time= {};
+for subi=1:nSubjs;
+    B_time{subi}= B_all{Timesubjs(subi)}
+end
+
+isequal(B_good{4},B_time{4});
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear nSubjs;
+
+nSubjs= length(NonTimers);
+
+B_NonTime= {};
+for subi=1:nSubjs;
+    B_NonTime{subi}= B_all{NonTimers(subi)}
+end
+
+%% Run cluster test for REGRESSIONS
+
 
                 % ROI for RP
 %                 chans = {'EEG20','EEG21','EEG29','EEG30','EEG31','EEG39','EEG40'};
@@ -214,7 +291,7 @@ isequal(B_all{13},B_some{6}); % IT WORKS but you should automatize it
 %                 cfg.avgoverchan = 'yes';
                 % cfg.avgovertime= 'yes';
                 cfg.correctm = 'cluster';
-                cfg.clusteralpha = 0.01; % 0.05 or 0.01
+                cfg.clusteralpha = 0.05; % 0.05 or 0.01
 %                 cfg.alpha = 0.01;
                 cfg.correcttail = 'prob'; % IMPORTANT: if you set alpha you should multiply your stat.prob x 2 
                 cfg.statistic = 'ft_statfun_depsamplesT';
@@ -230,7 +307,7 @@ isequal(B_all{13},B_some{6}); % IT WORKS but you should automatize it
                 % cfg_neighb.layout = '/Users/bt_neurospin/Repos/matlab_internal/turbo_mne/eeg_64_NM20884N.lay';
                 cfg_neighb.layout= 'eeg_64_NM20884N.lay';
                 cfg_neighb.method = 'distance';
-                cfg_neighb.neighbourdist = .13;%.18 %.13
+                cfg_neighb.neighbourdist = .18;%.18 %.13
                 cfg_neighb.sens= B_all{2}.elec;
                 neighbs = ft_prepare_neighbours(cfg_neighb);
                 cfg.neighbours = neighbs;
@@ -240,7 +317,7 @@ isequal(B_all{13},B_some{6}); % IT WORKS but you should automatize it
 
 %                 cd(alpha_folder); 
                 cd(prob_folder);
-                save('stat2_regr_ER1Contr_semiLog_nr_22_sn','stat','-v7.3'); % nr= narrow: All channels, latency= -2s -0.2s
+                save('stat2_regr_ER1_all_semiLog_nr_22_sn','stat','-v7.3'); % nr= narrow: All channels, latency= -2s -0.2s
                 save('stat_regr_ER2semiLog_hp_22','-v7.3'); % hp= hypothesis: ROI channels, latency= -2 -0.2s
                
                 % Check if there are significant clusters after correction

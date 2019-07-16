@@ -610,7 +610,7 @@ title('Std Waiting Times (N=22)','FontSize',34);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Is the Standard deviation scaled with the Mean?
+%% CORRELATION: Is the Standard deviation scaled with the Mean?
 
 
 X= behavStats.mdWT;
