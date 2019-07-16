@@ -82,7 +82,7 @@ for subi=1:nSubjs; %nSubjs
     un_conds = unique(cond);
     newcond= cond(good_trls);
     % add control
-    idx_cond2keep = find(newcond < Inf); % or < Inf
+    idx_cond2keep = find(newcond < Inf); % 2 or < Inf
     contrl_cond= newcond(idx_cond2keep);
     un_conds2 = unique(contrl_cond);
     % contrl_trls = idx_cond2keep; % NOT SURE ABOUT THIS PASSAGE
