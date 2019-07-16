@@ -44,7 +44,7 @@ powerspectra_folder= [results_Path, '/Powerspect']; % it can be also current_sub
     cd(powerspectra_folder);
     
 correlation_folder= [results_Path, '/Correlations']; % it can be also current_subj_folder
-    if ~exist(fullfile(regression_folder)); mkdir(fullfile(correlation_folder)); end;  
+    if ~exist(fullfile(correlation_folder)); mkdir(fullfile(correlation_folder)); end;  
     
 regression_folder= [results_Path, '/Regressions']; % it can be also current_subj_folder
     if ~exist(fullfile(regression_folder)); mkdir(fullfile(regression_folder)); end;
