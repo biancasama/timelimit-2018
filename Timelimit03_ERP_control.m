@@ -82,7 +82,7 @@ for subi=1:nSubjs; %nSubjs
     un_conds = unique(cond);
     newcond= cond(good_trls);
     % add control
-    idx_cond2keep = find(newcond > 2);
+    idx_cond2keep = find(newcond < Inf); % or < Inf
     contrl_cond= newcond(idx_cond2keep);
     un_conds2 = unique(contrl_cond);
     % contrl_trls = idx_cond2keep; % NOT SURE ABOUT THIS PASSAGE
@@ -104,15 +104,15 @@ for subi=1:nSubjs; %nSubjs
     
     % avg_cond
     
-    avg_cond=[];
-    
-    for condi = 1:length(un_conds2)
-        
-        cfg=[];
-        cfg.trials= find(contrl_cond == un_conds2(condi));
-        avg_cond{condi} = ft_timelockanalysis(cfg,DATA_CLEAN);
-        
-    end
+%     avg_cond=[];
+%     
+%     for condi = 1:length(un_conds2)
+%         
+%         cfg=[];
+%         cfg.trials= find(contrl_cond == un_conds2(condi));
+%         avg_cond{condi} = ft_timelockanalysis(cfg,DATA_CLEAN);
+%         
+%     end
 %     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -123,7 +123,7 @@ for subi=1:nSubjs; %nSubjs
 %     cfg=[];
 %     cfg.keeptrials  = 'yes';
 %     avg_trl = ft_timelockanalysis(cfg,DATA_CLEAN);
-    
+%     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
     % avg_one : you will need it for the template for the cluster test
@@ -137,22 +137,22 @@ for subi=1:nSubjs; %nSubjs
     
     % avg_condTrl : you will need it for the fancy plot
     
-%     avg_condTrl=[];
-%     
-%     for condi = 1:length(un_conds2)
-%         
-%         cfg=[];
-%         cfg.trials= find(contrl_cond == un_conds2(condi));
-%         cfg.keeptrials  = 'yes';
-%         avg_condTrl{condi} = ft_timelockanalysis(cfg,DATA_CLEAN);
-%         
-%     end
+    avg_condTrl=[];
+    
+    for condi = 1:length(un_conds2)
+        
+        cfg=[];
+        cfg.trials= find(contrl_cond == un_conds2(condi));
+        cfg.keeptrials  = 'yes';
+        avg_condTrl{condi} = ft_timelockanalysis(cfg,DATA_CLEAN);
+        
+    end
      
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
         
-    %% Save averages time-series
+    % Save averages time-series
     
     % Create the folder if it doesn't exist already
     
@@ -165,8 +165,8 @@ for subi=1:nSubjs; %nSubjs
     cd(contrTS_folder);
     
     % avg_cond
-    filename= [sprintf('subj%02d_TimeS_cond', subi)]; % add one if all trials mixed by condition
-    save(filename,'avg_cond','idx_cond2keep','contrl_cond','newcond','good_trls','-v7.3');
+%     filename= [sprintf('subj%02d_TimeS_cond', subi)]; % add one if all trials mixed by condition
+%     save(filename,'avg_cond','idx_cond2keep','contrl_cond','newcond','good_trls','-v7.3');
     % avg_trl
 %     filename= [sprintf('subj%02d_TimeS_bytrial', subi)]; % add one if all trials mixed by condition
 %     save(filename,'avg_trl', 'idx_cond2keep','contrl_cond','newcond','good_trls','-v7.3');
@@ -174,8 +174,8 @@ for subi=1:nSubjs; %nSubjs
 %     filename= [sprintf('subj%02d_TimeS_one', subi)]; % add one if all trials mixed by condition
 %     save(filename,'avg_one','idx_cond2keep','contrl_cond','newcond','good_trls','-v7.3');
     % avg_condTrl
-%     filename= [sprintf('subj%02d_TimeS_condTrl', subi)]; % add one if all trials mixed by condition
-%     save(filename,'avg_condTrl','idx_cond2keep','contrl_cond','newcond','good_trls','-v7.3');
+    filename= [sprintf('subj%02d_TimeS_condTrl', subi)]; % add one if all trials mixed by condition
+    save(filename,'avg_condTrl','idx_cond2keep','contrl_cond','newcond','good_trls','-v7.3');
 %     
     disp(['Subject ' num2str(subi) ' done']);
 
@@ -204,7 +204,7 @@ for subi=1:nSubjs;
    
 end
 % 
-% save pickupER_cond pickupER;
+save('pickupER_trl','pickupER','-v7.3');
 
 %%
 TimeSmatrix=[];
