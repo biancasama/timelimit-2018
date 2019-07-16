@@ -368,4 +368,78 @@ figure;
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+
+%% PLot mean amplitude averaged for specific window of time
+% load stuff created with extract_mean-amp code
+
+cd(timeseries_folder);
+load 'mean_all' 'sem_all';
+
+% f2=figure(1)
+figure
+errorbar(s,mean_all.ch20,sem_all.ch20,'-or','LineWidth',2,'MarkerEdgeColor','k',...
+    'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Mean')  % RED= mean
+hold on
+errorbar(s,mean_all.ch28,sem_all.ch28,'-ob','LineWidth',2,'MarkerEdgeColor','k',...
+    'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Mean')  % RED= mean
+hold on
+errorbar(s,mean_all.ch30,sem_all.ch30,'-og','LineWidth',2,'MarkerEdgeColor','k',...
+    'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Mean')  % RED= mean
+set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf'}) 
+xlabel('Conditions (sec)')
+ylabel('Mean RP amplitudes (\muV')
+title(['Mean RP voltage for ' num2str(i) ' subjs, all channels'])
+legend('Channel 20','Channel 28', 'Channel 30','show','Location','best')
+xlim([0 Inf])
+hold on
+
+% filename= ['RP_'];
+filename1= ['RPsLog_amps_chan30_all.png'];
+saveas(f1,filename1)
+f2=figure(2);
+filename2= ['Residual_fit_EEG_chan30_all.png'];
+saveas(f2,filename2)
+
+%% barplot
+figure
+bar(s,mean_all.ch20)
+hold on
+errorbar(s,mean_all.ch20,sem_all.ch20,'r.','LineWidth',2,'MarkerEdgeColor','k',...
+    'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Mean')
+set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf'}) 
+xlabel('Conditions (sec)')
+ylabel('RP amplitudes (\muV')
+title('Channel FC1')
+
+hold off
+bar(s,mean_all.ch28)
+hold on
+errorbar(s,mean_all.ch28,sem_all.ch28,'r.','LineWidth',2,'MarkerEdgeColor','k',...
+    'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Mean')
+set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf'}) 
+xlabel('Conditions (sec)')
+ylabel('RP amplitudes (\muV')
+title('Channel C3')
+
+hold off
+bar(s,mean_all.ch30)
+hold on
+errorbar(s,mean_all.ch30,sem_all.ch30,'r.','LineWidth',2,'MarkerEdgeColor','k',...
+    'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Mean')
+set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf'}) 
+xlabel('Conditions (sec)')
+ylabel('RP amplitudes (\muV')
+title('Channel Cz')
+
+bar(s,mean_all.ROI)
+hold on
+errorbar(s,mean_all.ROI,sem_all.ROI,'r.','LineWidth',2,'MarkerEdgeColor','k',...
+    'MarkerFaceColor','blue','MarkerSize',5,'DisplayName','Mean')
+set(gca,'xtick',s, 'xticklabel',{'2s','4s','8s','16s','Inf'}) 
+xlabel('Conditions (sec)')
+ylabel('RP amplitudes (\muV')
+title('ROI: channels 20,21,29,30,31,39,40')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% END

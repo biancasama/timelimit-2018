@@ -99,6 +99,125 @@ Y= behavStats.stdWT;
 save WTcorr2 r p;
 save WTcorr3 r p;
 
+%% Correlation between SINGLE-TRIAL response times (Y) vs conditions (X)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Load in useful data:
+
+    % Y= Response times (alias Waiting Times)
+    for subi=1:nSubjs;
+
+        cd(behavioral_folder);
+        fname_BehavData= sprintf('subj%02d_WaitingTimes',subi);
+        pickupBehav(subi) = load(fname_BehavData);
+
+    end
+    
+    
+    % X= Conditions (alias Time limits)
+    for subi=1:nSubjs;
+
+        cd(powerspectra_folder);
+        fname_Cond= sprintf('subj%02d_usefulinfo',subi);
+        pickupCond(subi) = load(fname_Cond);
+
+    end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Compute correlation here:
+
+cd(regression_folder);
+R= zeros(nSubjs,1); P= zeros(nSubjs,1);
+
+    for subi=1:nSubjs;
+
+        % Just re-converting Inf values into an integer number 
+        pickupCond(subi).newcond(pickupCond(subi).newcond==Inf) = 32;  
+    
+        X= [pickupCond(subi).newcond' ones(length(pickupCond(subi).newcond'),1)];
+        Y= pickupBehav(subi).RESPTIMES';
+        if isequal(length(Y(:,1)),length(X(:,1)))==1; disp('X & Y have correct dimensions'); else disp('X & Y DO NOT have compatible dimensions'); end;
+
+    %     profile on
+
+        R(:)= 0; P(:)=0;
+
+                   % [B(:,i,k,j),BINT,R] = regress(Y(:,i,k,j),X);
+                   [tmpR,tmpP] = corrcoef(Y(:),X(:,1));
+                   R = tmpR(1,2); P= tmpP(1,2);
+
+                   filename= [sprintf('subj%02d_Corr_Bhv', subi)]; % add one if all trials mixed by condition
+                   save(filename,'R','P','-v7.3');
+
+    %                profile off;
+    %                profile viewer;
+                   disp(['Subject ' num2str(subi) ' done']);
+
+    end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Reload obtained correlations values in a matrix:
+
+    for subi=1:nSubjs;
+
+        fname_Corr= sprintf('subj%02d_Corr_Bhv',subi);
+        pickupCorrs(subi) = load(fname_Corr);
+
+    end
+    
+save pickupCorrs_Behav pickupCorrs;
+
+%% If semi-LOG transformed 
+
+% Compute correlation here:
+
+cd(correlation_folder);
+R= zeros(nSubjs,1); P= zeros(nSubjs,1);
+
+    for subi=1:nSubjs;
+
+        % Just re-converting Inf values into an integer number 
+        pickupCond(subi).newcond(pickupCond(subi).newcond==Inf) = 32; 
+        pickupCond(subi).Logcond= log(pickupCond(subi).newcond); % LOG HERE
+    
+        X= [pickupCond(subi).Logcond' ones(length(pickupCond(subi).Logcond'),1)]; % LOG HERE
+        Y= pickupBehav(subi).RESPTIMES'; % LogRESPS
+        if isequal(length(Y(:,1)),length(X(:,1)))==1; disp('X & Y have correct dimensions'); else disp('X & Y DO NOT have compatible dimensions'); end;
+
+    %     profile on
+
+        R(:)= 0; P(:)=0;
+
+                   % [B(:,i,k,j),BINT,R] = regress(Y(:,i,k,j),X);
+                   [tmpR,tmpP] = corrcoef(Y(:),X(:,1));
+                   R = tmpR(1,2); P= tmpP(1,2);
+
+                   filename= [sprintf('subj%02d_Corr_Bhv_semiLog', subi)]; % add one if all trials mixed by condition
+                   save(filename,'R','P','-v7.3');
+
+    %                profile off;
+    %                profile viewer;
+                   disp(['Subject ' num2str(subi) ' done']);
+
+    end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% Reload obtained correlations values in a matrix:
+
+    for subi=1:nSubjs;
+
+        fname_Corr= sprintf('subj%02d_Corr_Bhv_semiLog',subi);
+        pickupCorrs(subi) = load(fname_Corr);
+
+    end
+    
+save 'pickupCorrs_Behav_semiLog' pickupCorrs;
+    
 %% END
-
-
