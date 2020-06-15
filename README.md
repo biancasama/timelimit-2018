@@ -16,7 +16,7 @@ Follow these steps to perform analyses on M/EEG data from the Timelimit2018 expe
 
 7. Run the script **[Timelimit01_behavioral_stats.m](https://github.com/biancasama/timelimit/blob/master/Timelimit01_behavioral_stats.m)** to compute *inferential statistics* (Kruskalwallis test, correlations, regressions).
 
-8. Run the script **[Timelimit01_behavioral_plots.m](https://github.com/biancasama/timelimit/blob/master/Timelimit01_behavioral_plots.m)** to make: BOX plots (documentation: [here](https://fr.mathworks.com/matlabcentral/answers/398012-adding-a-scatter-of-points-to-a-boxplot)), BAR plots, HISTOGRAMS, RAINCLOUD plots (documentation: Micah Alleh).
+8. Run the script **[Timelimit01_behavioral_plots.m](https://github.com/biancasama/timelimit/blob/master/Timelimit01_behavioral_plots.m)** to make: BOX plots (documentation: [here](https://fr.mathworks.com/matlabcentral/answers/398012-adding-a-scatter-of-points-to-a-boxplot)), BAR plots, HISTOGRAMS, RAINCLOUD plots (documentation: [Micah Alleh](https://micahallen.org/2018/03/15/introducing-raincloud-plots/)).
 
 ---
 
