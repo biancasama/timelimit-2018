@@ -1,12 +1,10 @@
 **Please, take 15 minutes to read this documentation**
 
-
+Follow these steps to perform analyses on M/EEG data from the Timelimit2018 experiment.
 
 ---
 
 ## Behavioural analysis
-
-You’ll start by editing this README file to learn how to edit a file in Bitbucket.
 
 1. Run the script [**Timelimit01_behavioral.m**](https://github.com/biancasama/timelimit/blob/master/Timelimit01_behavioral.m). You need to have [pre-processed files](http://www.fieldtriptoolbox.org/tutorial/preprocessing_erp/) in the form '*TimeLimit_v2_Resp_subj%02d_EEG_clean_concat_rej_interp' or '*TimeLimit_2_subj%02d_EEG_clean_concat_rej_interp'.
 2. Run my internal function **BTmy_cleandatamore** that sets up indexes for getting only the good trials and sort them based on the condition.
