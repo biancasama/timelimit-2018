@@ -14,7 +14,7 @@ You’ll start by editing this README file to learn how to edit a file in Bitbuc
     1c. Compute *descriptive statistics*(mean, median, std, sem...).
     1d. Key outputs: *pickupBehav*, *DescriptiveStats*, containing variables: behavStats  LogBehavStats GAVGbehav GAVGLogbehav IQR.
     
-2. If you need to control for a specific condition, run the mirror script **[Timelimit01_behavioral_control.m]**(https://github.com/biancasama/timelimit/blob/master/Timelimit01_behavioral_control.m).
+2. If you need to control for a specific condition, run the mirror script **[Timelimit01_behavioral_control.m](https://github.com/biancasama/timelimit/blob/master/Timelimit01_behavioral_control.m)**.
 
 3. Run the script **[Timelimit01_behavioral_stats.m]**(https://github.com/biancasama/timelimit/blob/master/Timelimit01_behavioral_stats.m) to compute *inferential statistics* (Kruskalwallis test, correlations, regressions).
 
