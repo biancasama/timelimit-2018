@@ -18,7 +18,7 @@ You’ll start by editing this README file to learn how to edit a file in Bitbuc
 
 3. Run the script **[Timelimit01_behavioral_stats.m](https://github.com/biancasama/timelimit/blob/master/Timelimit01_behavioral_stats.m)** to compute *inferential statistics* (Kruskalwallis test, correlations, regressions).
 
-4. Run the script **[Timelimit01_behavioral_plots.m](https://github.com/biancasama/timelimit/blob/master/Timelimit01_behavioral_plots.m)** to make: BOX plots ([documentation] (https://fr.mathworks.com/matlabcentral/answers/398012-adding-a-scatter-of-points-to-a-boxplot)), BAR plots, HISTOGRAMS, RAINCLOUD plots (documentation: Micah Alleh).
+4. Run the script **[Timelimit01_behavioral_plots.m](https://github.com/biancasama/timelimit/blob/master/Timelimit01_behavioral_plots.m)** to make: BOX plots (documentation: [here](https://fr.mathworks.com/matlabcentral/answers/398012-adding-a-scatter-of-points-to-a-boxplot)), BAR plots, HISTOGRAMS, RAINCLOUD plots (documentation: Micah Alleh).
 
 ---
 
