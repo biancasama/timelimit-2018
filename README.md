@@ -10,7 +10,7 @@ Follow these steps to perform analyses on M/EEG data from the Timelimit2018 expe
 2. Run my internal function **BTmy_cleandatamore** that sets up indexes for getting only the good trials and sort them based on the condition.
 3. Load and group behavioral data, compute logaritmic transformations of the behavioural and normalize response times.
 4. Compute *descriptive statistics*(mean, median, std, sem...).
-5.  Key outputs: *pickupBehav*, *DescriptiveStats*, containing variables: *behavStats  LogBehavStats GAVGbehav GAVGLogbehav IQR*.
+5. Key outputs: *pickupBehav*, *DescriptiveStats*, containing variables: *behavStats  LogBehavStats GAVGbehav GAVGLogbehav IQR*.
     
 6. If you need to control for a specific condition, run the mirror script **[Timelimit01_behavioral_control.m](https://github.com/biancasama/timelimit/blob/master/Timelimit01_behavioral_control.m)**.
 
@@ -21,6 +21,15 @@ Follow these steps to perform analyses on M/EEG data from the Timelimit2018 expe
 ---
 
 ## ERP analysis
+
+1. Run the script **[Timelimit02_ERP_average.m](https://github.com/biancasama/timelimit/blob/master/Timelimit02_ERP_average.m)** 
+2. Run the script **[Timelimit02_ERP_cluster.m](https://github.com/biancasama/timelimit/blob/master/Timelimit02_ERP_cluster.m)**
+3. Run the script **[Timelimit02_ERP_lateralized.m](https://github.com/biancasama/timelimit/blob/master/Timelimit02_ERP_lateralized.m)**
+4. Timelimit02_ERP_plots.m
+5. Timelimit02_ERP_stats.m
+6. Timelimit02_ERP_statscluster.m
+7. Timelimit02_ERP_statsclusterplot.m
+8. Timelimit02_ERP_variability.m
 
 
 
