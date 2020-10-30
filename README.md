@@ -21,15 +21,26 @@ Follow these steps to perform analyses on M/EEG data from the Timelimit2018 expe
 ---
 
 ## ERP analysis
+Note: ER stays for event-related, TimeS for time-series.
 
-1. Run the script **[Timelimit02_ERP_average.m](https://github.com/biancasama/timelimit/blob/master/Timelimit02_ERP_average.m)** 
+1. Run the script **[Timelimit02_ERP_average.m](https://github.com/biancasama/timelimit/blob/master/Timelimit02_ERP_average.m)**
+    This scripts computes the **movement-timelocked ERP average within subject and between subject** (grandaverage)for all channels for all time points
+    within the window -3s 0s.
+    After running this script you should have the following variables:
+    *avg_one*: subj%02d_TimeS_one; 'one' means that all trials are mixed by condition and it's averaging across trials as well.
+    *avg_trl*: subj%02d_TimeS_bytrial; 'trl' means that we are using the Fieldtrip function cfg.keeptrials  = 'yes'; to keep each trial separate (i.e. there is no averaging across trials).
+    *avg_cond*: subj%02d_TimeS_cond; 'cond' means that we are sorting the trials by conditions and averaging across trials.
+    *avg_condTrl*: subj%02d_TimeS_condTrl; 'condTrl' means that we are sorting the trials by conditions but using the Fieldtrip function cfg.keeptrials  = 'yes'; to keep each trial separate .
+   
+    *Grand_ER*: 1x5 cell array of avg 60 channels x 2001 timepoints.
+    *Grand_ER_Ind*: 1x5 cell array of 22 subjects x 60 channels x 2001 timepoints (we are using the Fieldtrip function cfg.keeptrials  = 'yes'; to keep each trial separate, in this case each subject). 'Ind' stays for individual (subject).
 2. Run the script **[Timelimit02_ERP_cluster.m](https://github.com/biancasama/timelimit/blob/master/Timelimit02_ERP_cluster.m)**
 3. Run the script **[Timelimit02_ERP_lateralized.m](https://github.com/biancasama/timelimit/blob/master/Timelimit02_ERP_lateralized.m)**
-4. Timelimit02_ERP_plots.m
-5. Timelimit02_ERP_stats.m
-6. Timelimit02_ERP_statscluster.m
-7. Timelimit02_ERP_statsclusterplot.m
-8. Timelimit02_ERP_variability.m
+4. Run the script **[Timelimit02_ERP_plots.m](https://github.com/biancasama/timelimit-2018/blob/master/Timelimit02_ERP_plots.m)**
+5. Run the script **[Timelimit02_ERP_stats.m](https://github.com/biancasama/timelimit-2018/blob/master/Timelimit02_ERP_stats.m)**
+6. Run the script **[Timelimit02_ERP_statscluster.m](https://github.com/biancasama/timelimit-2018/blob/master/Timelimit02_ERP_statscluster.m)**
+7. Run the script **[Timelimit02_ERP_statsclusterplot.m](https://github.com/biancasama/timelimit-2018/blob/master/Timelimit02_ERP_statsclusterplot.m)**
+8. Run the script **[Timelimit02_ERP_variability.m](https://github.com/biancasama/timelimit-2018/blob/master/Timelimit02_ERP_variability.m)**
 
 
 
